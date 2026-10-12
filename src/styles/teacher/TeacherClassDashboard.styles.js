@@ -4,74 +4,75 @@ import { theme } from '../theme'
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background
+    backgroundColor: '#183b7e'
   },
-  container: {
-    padding: theme.spacing.xl
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#f8fafc'
+  },
+  scrollContent: {
+    flexGrow: 1
   },
   headerSection: {
-    marginBottom: theme.spacing.xl
+    backgroundColor: '#183b7e',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 22
   },
   topStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.md
+    marginBottom: 16
   },
   livePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#009b5a',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.primaryBorder
+    paddingVertical: 5,
+    borderRadius: 20
   },
-  greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.success,
+  whiteDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#ffffff',
     marginRight: 6
   },
   livePillText: {
     fontSize: 11,
     fontWeight: '800',
-    color: theme.colors.primary,
+    color: '#ffffff',
     letterSpacing: 0.5
   },
-  onlinePill: {
+  onlineRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surfaceAlt,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.full
+    alignItems: 'center'
   },
-  blueDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.primaryLight,
+  onlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#22c55e',
     marginRight: 6
   },
-  onlinePillText: {
-    fontSize: 11,
-    color: theme.colors.textSecondary,
+  onlineText: {
+    fontSize: 12,
+    color: '#bfdbfe',
     fontWeight: '600'
   },
   classTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: theme.colors.textPrimary,
+    color: '#ffffff',
     marginBottom: 4
   },
   classSubtitle: {
     fontSize: 13,
-    color: theme.colors.textSecondary,
+    color: '#bfdbfe',
     fontWeight: '500',
-    marginBottom: theme.spacing.sm
+    marginBottom: 8
   },
   elapsedRow: {
     flexDirection: 'row',
@@ -82,125 +83,126 @@ export const styles = StyleSheet.create({
   },
   elapsedText: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginLeft: 6
+    color: '#bfdbfe'
+  },
+  bodySection: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28
   },
   kpiCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 18,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.xl,
+    borderColor: '#e2e8f0',
+    marginBottom: 20,
     ...theme.shadows.card
   },
   kpiCardTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: theme.colors.textMuted,
+    color: '#64748b',
     letterSpacing: 0.5,
-    marginBottom: theme.spacing.lg
+    marginBottom: 14
   },
   kpiRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.lg
+    marginBottom: 14
   },
   kpiItem: {
-    alignItems: 'center',
-    flex: 1
-  },
-  kpiValue: {
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 2
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4
   },
   kpiValuePresent: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    marginBottom: 2,
-    color: theme.colors.success
+    color: '#009b5a'
+  },
+  kpiLabelPresent: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#009b5a'
   },
   kpiValueLate: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    marginBottom: 2,
-    color: theme.colors.warning
+    color: '#d97706'
+  },
+  kpiLabelLate: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#d97706'
   },
   kpiValuePending: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    marginBottom: 2,
-    color: theme.colors.textSecondary
+    color: '#475569'
   },
-  kpiLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.textSecondary
+  kpiLabelPending: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569'
   },
   progressBarBg: {
     height: 8,
-    backgroundColor: theme.colors.surfaceAlt,
+    backgroundColor: '#f1f5f9',
     borderRadius: 4,
     overflow: 'hidden'
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: theme.colors.success,
+    backgroundColor: '#009b5a',
     borderRadius: 4
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
-    color: theme.colors.textMuted,
+    color: '#0f172a',
     letterSpacing: 0.5,
-    marginBottom: theme.spacing.md
+    marginBottom: 12
   },
   moduleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.md,
+    borderColor: '#e2e8f0',
+    marginBottom: 12,
     ...theme.shadows.card
-  },
-  moduleIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.lg
   },
   moduleIconBoxBlue: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: theme.spacing.lg,
+    marginRight: 14,
     backgroundColor: '#eff6ff'
   },
   moduleIconBoxGreen: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: theme.spacing.lg,
-    backgroundColor: '#f0fdf4'
+    marginRight: 14,
+    backgroundColor: '#eff6ff'
   },
   moduleIconBoxGray: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: theme.spacing.lg,
+    marginRight: 14,
     backgroundColor: '#f8fafc'
   },
   moduleInfo: {
@@ -209,12 +211,12 @@ export const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#0f172a',
     marginBottom: 2
   },
   moduleDesc: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
+    color: '#64748b',
     marginBottom: 4
   },
   qrStatusMini: {
@@ -225,28 +227,36 @@ export const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.success,
+    backgroundColor: '#009b5a',
     marginRight: 6
   },
   qrStatusMiniText: {
     fontSize: 11,
     fontWeight: '600',
-    color: theme.colors.success
+    color: '#009b5a'
   },
   offlineTag: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    color: theme.colors.primary,
-    letterSpacing: 0.3
+    color: '#2563eb',
+    letterSpacing: 0.2
+  },
+  chevronCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   closeBtn: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: '#0b1528',
+    borderRadius: 12,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    marginTop: 14,
+    marginBottom: 8,
     ...theme.shadows.floating
   },
   closeBtnContent: {
@@ -254,29 +264,29 @@ export const styles = StyleSheet.create({
     alignItems: 'center'
   },
   btnIcon: {
-    marginRight: theme.spacing.sm
+    marginRight: 8
   },
   closeBtnText: {
-    color: theme.colors.textWhite,
+    color: '#ffffff',
     fontSize: 15,
     fontWeight: '700'
   },
   closeBtnNote: {
     fontSize: 11,
-    color: theme.colors.textMuted,
+    color: '#64748b',
     textAlign: 'center',
-    marginBottom: theme.spacing.md
+    marginBottom: 16
   },
   resetSimBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     paddingVertical: 12,
-    marginBottom: theme.spacing.xl
+    marginBottom: 20
   },
   resetSimBtnText: {
     color: '#475569',
