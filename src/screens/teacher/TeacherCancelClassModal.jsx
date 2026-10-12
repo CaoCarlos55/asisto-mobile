@@ -16,7 +16,7 @@ import { styles } from '../../styles/modals/TeacherCancelClassModal.styles'
 export default function TeacherCancelClassModal({ navigation }) {
   const { cancelClass } = useClassSession()
   const [reason, setReason] = useState(
-    'Suspensión por corte imprevisto de suministro eléctrico en Aula 204.'
+    'Suspensión de actividades académicas por eventualidad institucional.'
   )
 
   const handleConfirm = async () => {

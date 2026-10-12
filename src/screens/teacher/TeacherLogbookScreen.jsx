@@ -23,11 +23,11 @@ const INCIDENT_TYPES = [
 
 export default function TeacherLogbookScreen({ navigation }) {
   const { logbook, saveLogbook, classInfo } = useClassSession()
-  const [topic, setTopic] = useState(logbook.topic || 'Racionalización\nEjercicios prácticos')
+  const [topic, setTopic] = useState(logbook.topic || 'Tema programático del día\nDesarrollo de contenidos y actividades prácticas')
   const [selectedIncident, setSelectedIncident] = useState(logbook.incidentType || 'Clase sin novedades')
   const [observations, setObservations] = useState(
     logbook.observations ||
-      'Grupo con buena participación en ejercicios en pizarra. Se acordó extender el plazo del laboratorio #2 para la sesión del próximo viernes.'
+      'Desarrollo normal de la sesión pedagógica según la planificación curricular. Participación activa de los estudiantes en las actividades propuestas.'
   )
 
   const handleSave = async () => {
@@ -54,7 +54,7 @@ export default function TeacherLogbookScreen({ navigation }) {
             </View>
           </View>
 
-          <Text style={styles.subjectTitle}>{classInfo.subject} • Sec. B • {classInfo.classroom}</Text>
+          <Text style={styles.subjectTitle}>{classInfo.subject} • {classInfo.section} • {classInfo.classroom}</Text>
           <Text style={styles.subjectSub}>
             Martes 29 Sep 2026 • Sesión vinculada al pase de lista
           </Text>

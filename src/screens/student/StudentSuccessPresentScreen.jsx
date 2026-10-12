@@ -34,13 +34,13 @@ export default function StudentSuccessPresentScreen({ navigation }) {
 
           <Text style={styles.fieldLabel}>Asignatura</Text>
           <Text style={styles.fieldValue}>{classInfo.subject}</Text>
-          <Text style={styles.fieldSub}>{classInfo.section} • Semestre 2026-I</Text>
+          <Text style={styles.fieldSub}>{classInfo.section} • Año Escolar 2025-2026</Text>
 
           <View style={styles.divider} />
 
           <Text style={styles.fieldLabel}>Docente y Aula</Text>
           <Text style={styles.fieldValue}>{classInfo.teacher}</Text>
-          <Text style={styles.fieldSub}>{classInfo.classroom} • Campus Central</Text>
+          <Text style={styles.fieldSub}>{classInfo.classroom} • Sede Principal</Text>
 
           <View style={styles.divider} />
 

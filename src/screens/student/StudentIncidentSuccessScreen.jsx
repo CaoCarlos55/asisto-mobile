@@ -12,7 +12,7 @@ import { styles } from '../../styles/student/StudentIncidentSuccess.styles'
 
 export default function StudentIncidentSuccessScreen({ route, navigation }) {
   const { classInfo } = useClassSession()
-  const { folio = '#INC-2026-0842', motive = 'Salud / Cita Médica', fileName = 'constancia_medica.pdf' } =
+  const { folio = '#INC-2026-0842', motive = 'Salud / Cita Médica', fileName = 'justificativo_asistencia.pdf' } =
     route.params || {}
 
   return (

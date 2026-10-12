@@ -15,7 +15,7 @@ import { styles } from '../../styles/auth/TeacherLogin.styles'
 
 export default function TeacherLoginScreen({ navigation }) {
   const { loginAsTeacher } = useAuth()
-  const [email, setEmail] = useState('profesor.garcia@universidad.edu')
+  const [email, setEmail] = useState('profesor.garcia@institucion.edu')
   const [password, setPassword] = useState('••••••••••••')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -52,7 +52,7 @@ export default function TeacherLoginScreen({ navigation }) {
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="profesor.garcia@universidad.edu"
+                placeholder="profesor.garcia@institucion.edu"
                 placeholderTextColor="#94a3b8"
                 autoCapitalize="none"
               />

@@ -21,10 +21,10 @@ export default function StudentIncidentFormScreen({ navigation }) {
   const { classInfo } = useClassSession()
   const [selectedMotive, setSelectedMotive] = useState('Salud / Médico')
   const [description, setDescription] = useState(
-    'Cita médica de emergencia en centro médico del campus.'
+    'Retraso justificado por contingencia en el traslado matutino hacia la institución.'
   )
   const [attachedFile, setAttachedFile] = useState({
-    name: 'constancia_medica.pdf',
+    name: 'justificativo_asistencia.pdf',
     size: '240 KB'
   })
 

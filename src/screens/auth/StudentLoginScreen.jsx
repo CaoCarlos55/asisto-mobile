@@ -15,7 +15,7 @@ import { styles } from '../../styles/auth/StudentLogin.styles'
 
 export default function StudentLoginScreen({ navigation }) {
   const { loginAsStudent } = useAuth()
-  const [email, setEmail] = useState('estudiante.alvarez@univ.edu')
+  const [email, setEmail] = useState('estudiante.alvarez@institucion.edu')
   const [password, setPassword] = useState('••••••••••••')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -52,7 +52,7 @@ export default function StudentLoginScreen({ navigation }) {
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="estudiante.alvarez@univ.edu"
+                placeholder="estudiante.alvarez@institucion.edu"
                 placeholderTextColor="#94a3b8"
                 autoCapitalize="none"
               />

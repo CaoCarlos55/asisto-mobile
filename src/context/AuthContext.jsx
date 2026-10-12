@@ -8,8 +8,8 @@ export const DEFAULT_TEACHER = {
   id: 'doc-001',
   role: 'teacher',
   name: 'Prof. Roberto García',
-  email: 'profesor.garcia@universidad.edu',
-  dept: 'Dpto. de Computación • Semestre 2026-II',
+  email: 'profesor.garcia@institucion.edu',
+  dept: 'Área de Matemáticas • Año Escolar 2025-2026',
   initials: 'RG'
 }
 
@@ -17,10 +17,10 @@ export const DEFAULT_STUDENT = {
   id: 'est-001',
   role: 'student',
   name: 'Daniel Álvarez',
-  email: 'estudiante.alvarez@univ.edu',
+  email: 'estudiante.alvarez@institucion.edu',
   ci: 'V-29.842.119',
-  section: 'Sección B',
-  campus: 'En Campus (Aula 204)',
+  section: '4to Año • Sección B',
+  campus: 'En el Plantel (Aula 12)',
   initials: 'DA'
 }
 
@@ -35,6 +35,10 @@ export function AuthProvider({ children }) {
         const stored = await AsyncStorage.getItem('asisto_user_session')
         if (stored) {
           const parsed = JSON.parse(stored)
+          if (parsed.dept?.includes('Ingeniería') || parsed.email?.includes('ucab.edu.ve') || parsed.section?.includes('Semestre')) {
+            await AsyncStorage.removeItem('asisto_user_session')
+            return
+          }
           setCurrentUser(parsed)
           setUserRole(parsed.role)
         }
@@ -47,14 +51,14 @@ export function AuthProvider({ children }) {
     loadStoredSession()
   }, [])
 
-  const loginAsTeacher = async (email = 'profesor.garcia@universidad.edu') => {
+  const loginAsTeacher = async (email = 'profesor.garcia@institucion.edu') => {
     const profile = { ...DEFAULT_TEACHER, email }
     setCurrentUser(profile)
     setUserRole('teacher')
     await AsyncStorage.setItem('asisto_user_session', JSON.stringify(profile))
   }
 
-  const loginAsStudent = async (email = 'estudiante.alvarez@univ.edu') => {
+  const loginAsStudent = async (email = 'estudiante.alvarez@institucion.edu') => {
     const profile = { ...DEFAULT_STUDENT, email }
     setCurrentUser(profile)
     setUserRole('student')

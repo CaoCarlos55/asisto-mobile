@@ -9,8 +9,8 @@ export async function sendAttendanceLog({ studentCi, classroomId, subject, statu
   if (!supabase) return null
   const { data, error } = await supabase.from('attendance_logs').insert({
     student_ci: studentCi,
-    classroom_id: classroomId || 'aula-204',
-    subject: subject || 'Algoritmos y Programación',
+    classroom_id: classroomId || 'aula-12',
+    subject: subject || 'Matemáticas',
     status: status, // 'presente' | 'retardo' | 'ausente' | 'justificado'
     geofence_verified: geofenceVerified,
     scan_timestamp: new Date().toISOString()
@@ -35,19 +35,19 @@ export async function sendIncidentReport({
     time_label: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     student_name: studentName,
     student_ci: studentCi,
-    year_level: '5to Año',
+    year_level: '4to Año',
     attendance_accum: '94%',
     history_stats: '24 Asistencias / 1 Falta',
     subject: subject,
     subject_short: subject.split(' ')[0],
     teacher: 'Prof. Roberto García',
-    room: 'Aula 204',
+    room: 'Aula 12',
     scan_time: '10:24 AM (+4 min límite)',
-    tag_type: 'Salud / Cita Médica',
+    tag_type: 'Justificativo de Asistencia',
     tag_color: 'amber',
-    file_type: 'PDF Médico',
+    file_type: 'Documento PDF',
     statement: statement,
-    pdf_name: pdfName || 'constancia_medica.pdf',
+    pdf_name: pdfName || 'justificativo_asistencia.pdf',
     status: 'Pendiente'
   }).select()
 
@@ -64,7 +64,7 @@ export async function cancelClassroomSession(classroomId, reason) {
     badge_color: 'red',
     note: `Cancelada: ${reason}`,
     has_action: false
-  }).eq('id', classroomId || 'aula-204')
+  }).eq('id', classroomId || 'aula-12')
 
   if (error) console.warn('Error al cancelar clase en Supabase:', error.message)
 }
@@ -78,12 +78,12 @@ export async function closeClassroomSession(classroomId) {
     delay_minutes: 0,
     note: 'Cierre completado por docente',
     has_action: false
-  }).eq('id', classroomId || 'aula-204')
+  }).eq('id', classroomId || 'aula-12')
 
   if (error) console.warn('Error al cerrar clase en Supabase:', error.message)
 
   // Resolver alertas docentes activas en coordinación
   await supabase.from('teacher_alerts').update({
     status: 'resolved'
-  }).eq('classroom_id', classroomId || 'aula-204')
+  }).eq('classroom_id', classroomId || 'aula-12')
 }

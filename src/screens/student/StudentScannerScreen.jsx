@@ -50,7 +50,7 @@ export default function StudentScannerScreen({ navigation }) {
         <View style={styles.geofenceBanner}>
           <View style={styles.greenDot} />
           <View>
-            <Text style={styles.geofenceBannerTitle}>GEOCERCA ACTIVA • AULA 204</Text>
+            <Text style={styles.geofenceBannerTitle}>GEOCERCA ACTIVA • AULA 12</Text>
             <Text style={styles.geofenceBannerSub}>GPS: Alta precisión (±3m)</Text>
           </View>
         </View>
@@ -105,7 +105,7 @@ export default function StudentScannerScreen({ navigation }) {
             <Text style={styles.geofenceCardTitle}>
               Geocerca Validada (HU09)
             </Text>
-            <Text style={styles.geofenceCardSub}>Campus Central • Aula 204</Text>
+            <Text style={styles.geofenceCardSub}>Sede Principal • Aula 12</Text>
             <Text style={styles.geofenceDistance}>
               Distancia: {distanceMeters}m (Máximo: 25m)
             </Text>

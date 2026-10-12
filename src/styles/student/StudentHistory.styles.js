@@ -90,6 +90,7 @@ export const styles = StyleSheet.create({
   },
   filtersRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: theme.spacing.lg
   },

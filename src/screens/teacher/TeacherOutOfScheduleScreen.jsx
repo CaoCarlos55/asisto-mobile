@@ -31,7 +31,7 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{currentUser?.name || 'Prof. Roberto García'}</Text>
-              <Text style={styles.profileDept}>{currentUser?.dept || 'Dpto. de Computación • Semestre 2026-II'}</Text>
+              <Text style={styles.profileDept}>{currentUser?.dept || 'Área de Matemáticas • Año Escolar 2025-2026'}</Text>
             </View>
           </View>
           <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
@@ -60,24 +60,24 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
           {/* Reloj de Servidor */}
           <View style={styles.serverTimePill}>
             <View style={styles.greenDot} />
-            <Text style={styles.serverTimeText}>Reloj Servidor: Martes 29 Sep • 09:41 AM</Text>
+            <Text style={styles.serverTimeText}>Reloj Servidor: Martes 29 Sep • 07:11 AM</Text>
           </View>
         </View>
 
         {/* Tarjeta de Próxima Clase */}
         <View style={styles.nextClassCard}>
           <Text style={styles.nextClassLabel}>PRÓXIMA CLASE EN CALENDARIO</Text>
-          <Text style={styles.nextClassTitle}>Algoritmos y Programación</Text>
-          <Text style={styles.nextClassSub}>Sección B • Curso II</Text>
+          <Text style={styles.nextClassTitle}>Matemáticas</Text>
+          <Text style={styles.nextClassSub}>4to Año • Sección B</Text>
 
           <View style={styles.badgeRow}>
             <View style={styles.badgeItem}>
               <MapPin size={13} color="#b91c1c" />
-              <Text style={styles.badgeText}>Aula 204</Text>
+              <Text style={styles.badgeText}>Aula 12</Text>
             </View>
             <View style={styles.badgeItem}>
               <Clock size={13} color="#64748b" />
-              <Text style={styles.badgeText}>10:00 - 11:30 AM</Text>
+              <Text style={styles.badgeText}>07:30 - 09:00 AM</Text>
             </View>
             <View style={[styles.badgeItem, styles.badgeHighlight]}>
               <Text style={styles.badgeHighlightText}>En 19 min</Text>

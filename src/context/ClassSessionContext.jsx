@@ -44,10 +44,10 @@ export function ClassSessionProvider({ children }) {
   const [sessionStatus, setSessionStatus] = useState('active')
 
   const [classInfo, setClassInfo] = useState({
-    subject: 'Algoritmos y Programación',
-    section: 'Sección B • Curso II',
-    classroom: 'Aula 204',
-    timeBlock: '10:00 - 11:30 AM',
+    subject: 'Matemáticas',
+    section: '4to Año • Sección B',
+    classroom: 'Aula 12',
+    timeBlock: '07:30 - 09:00 AM',
     teacher: 'Prof. Roberto García',
     qrStatus: 'Activo',
     elapsedMinutes: 5,
@@ -57,10 +57,10 @@ export function ClassSessionProvider({ children }) {
   const [students, setStudents] = useState(INITIAL_STUDENTS)
 
   const [logbook, setLogbook] = useState({
-    subject: 'Algoritmos y Programación',
-    topic: 'Racionalización\nEjercicios prácticos',
+    subject: 'Matemáticas',
+    topic: 'Tema programático del día\nDesarrollo de contenidos y actividades prácticas',
     incidentType: 'Clase sin novedades',
-    observations: 'Grupo con buena participación en ejercicios en pizarra. Se acordó extender el plazo del laboratorio #2 para la sesión del próximo viernes.'
+    observations: 'Desarrollo normal de la sesión pedagógica según la planificación curricular. Participación activa de los estudiantes en las actividades propuestas.'
   })
 
   const [cancellationReason, setCancellationReason] = useState('')
@@ -71,6 +71,15 @@ export function ClassSessionProvider({ children }) {
         const stored = await AsyncStorage.getItem('asisto_session_state')
         if (stored) {
           const parsed = JSON.parse(stored)
+          // Descartar datos obsoletos con materias universitarias o temas cableados anteriores
+          if (
+            parsed.logbook?.topic?.includes('Racionalización') ||
+            parsed.logbook?.subject?.includes('Algoritmos') ||
+            parsed.classInfo?.subject?.includes('Algoritmos')
+          ) {
+            await AsyncStorage.removeItem('asisto_session_state')
+            return
+          }
           if (parsed.sessionStatus) setSessionStatus(parsed.sessionStatus)
           if (parsed.students) setStudents(parsed.students)
           if (parsed.logbook) setLogbook(parsed.logbook)
@@ -103,7 +112,7 @@ export function ClassSessionProvider({ children }) {
     setSessionStatus('cancelled')
     setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
     await persistOffline(students, 'cancelled', logbook)
-    await cancelClassroomSession('aula-204', reason)
+    await cancelClassroomSession('aula-12', reason)
   }
 
   const markManualAttendance = async (studentId, cause) => {
@@ -141,7 +150,7 @@ export function ClassSessionProvider({ children }) {
     })
     setStudents(finalised)
     await persistOffline(finalised, 'closed')
-    await closeClassroomSession('aula-204')
+    await closeClassroomSession('aula-12')
   }
 
   const registerStudentAttendance = async (studentCi, status, time, observations = null) => {
@@ -160,7 +169,7 @@ export function ClassSessionProvider({ children }) {
     await persistOffline(updated)
     await sendAttendanceLog({
       studentCi,
-      classroomId: 'aula-204',
+      classroomId: 'aula-12',
       subject: classInfo.subject,
       status: status === 'present_qr' ? 'presente' : status === 'late' ? 'retardo' : 'ausente'
     })

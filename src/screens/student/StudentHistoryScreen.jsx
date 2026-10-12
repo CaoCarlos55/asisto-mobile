@@ -12,42 +12,47 @@ import { styles } from '../../styles/student/StudentHistory.styles'
 const HISTORY_DATA = [
   {
     id: 'h1',
-    subject: 'Contabilidad',
-    sub: 'Sec. B • Aula 204 • Prof. García',
-    time: 'Hoy 10:04 AM • Escaneo puntual',
+    subject: 'Matemáticas',
+    filterKey: 'mat',
+    sub: '4to Año B • Aula 12 • Prof. Roberto García',
+    time: 'Hoy 07:35 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
   },
   {
     id: 'h2',
     subject: 'Física',
-    sub: 'Sec. A • Aula 102 • Prof. Méndez',
-    time: 'Ayer 08:14 AM • Ventana frontera',
+    filterKey: 'fis',
+    sub: '4to Año B • Aula 12 • Prof. Méndez',
+    time: 'Ayer 08:44 AM • Registro con retardo',
     status: 'late',
     statusText: 'Retardo'
   },
   {
     id: 'h3',
-    subject: 'Ciencias de la Tierra',
-    sub: 'Sec. B • Lab 3 • Prof. Silva',
-    time: 'Vie 25 Sep • 02:05 PM',
+    subject: 'Química',
+    filterKey: 'qui',
+    sub: '4to Año B • Lab. Ciencias • Prof. Silva',
+    time: 'Vie 25 Sep • 09:15 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
   },
   {
     id: 'h4',
-    subject: 'Matemáticas',
-    sub: 'Sec. A • Aula 204 • Prof. Rivas',
-    time: 'Mar 22 Sep • Motivo: Causa médica',
-    note: 'Justificación extemporánea',
+    subject: 'Castellano y Literatura',
+    filterKey: 'cas',
+    sub: '4to Año B • Aula 12 • Prof. Rivas',
+    time: 'Mar 22 Sep • Causa médica informada',
+    note: 'Justificativo médico en validación',
     status: 'in_review',
     statusText: 'En revisión Coord.'
   },
   {
     id: 'h5',
-    subject: 'Algoritmos y Programación',
-    sub: 'Sec. B • Aula 204 • Prof. García',
-    time: 'Lun 21 Sep • 10:02 AM • Escaneo puntual',
+    subject: 'Biología',
+    filterKey: 'bio',
+    sub: '4to Año B • Lab. Ciencias • Prof. García',
+    time: 'Lun 21 Sep • 07:32 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
   }
@@ -55,6 +60,10 @@ const HISTORY_DATA = [
 
 export default function StudentHistoryScreen({ navigation }) {
   const [activeFilter, setActiveFilter] = useState('all')
+
+  const filteredHistory = activeFilter === 'all'
+    ? HISTORY_DATA
+    : HISTORY_DATA.filter(item => item.filterKey === activeFilter)
 
   const renderItem = ({ item }) => {
     const isPresent = item.status === 'present_qr'
@@ -141,27 +150,41 @@ export default function StudentHistoryScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'alg' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('alg')}
+            style={[styles.filterChip, activeFilter === 'mat' && styles.filterChipActive]}
+            onPress={() => setActiveFilter('mat')}
           >
-            <Text style={[styles.filterChipText, activeFilter === 'alg' && styles.filterChipTextActive]}>
-              Algoritmos y Prog.
+            <Text style={[styles.filterChipText, activeFilter === 'mat' && styles.filterChipTextActive]}>
+              Matemáticas
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'bd' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('bd')}
+            style={[styles.filterChip, activeFilter === 'fis' && styles.filterChipActive]}
+            onPress={() => setActiveFilter('fis')}
           >
-            <Text style={[styles.filterChipText, activeFilter === 'bd' && styles.filterChipTextActive]}>
-              Base de Datos I
+            <Text style={[styles.filterChipText, activeFilter === 'fis' && styles.filterChipTextActive]}>
+              Física
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, activeFilter === 'qui' && styles.filterChipActive]}
+            onPress={() => setActiveFilter('qui')}
+          >
+            <Text style={[styles.filterChipText, activeFilter === 'qui' && styles.filterChipTextActive]}>
+              Química
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Lista Histórica */}
         <FlatList
-          data={HISTORY_DATA}
+          data={filteredHistory}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
           keyExtractor={item => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}

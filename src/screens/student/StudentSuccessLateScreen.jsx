@@ -25,7 +25,7 @@ export default function StudentSuccessLateScreen({ navigation }) {
 
         <View style={styles.frontierPill}>
           <View style={styles.amberDot} />
-          <Text style={styles.frontierPillText}>FRONTERA (11-20 MIN)</Text>
+          <Text style={styles.frontierPillText}>RETARDO (11-20 MIN)</Text>
         </View>
 
         {/* Caja de Aviso de Reglamento Académico */}
@@ -46,7 +46,7 @@ export default function StudentSuccessLateScreen({ navigation }) {
 
           <Text style={styles.fieldLabel}>Asignatura</Text>
           <Text style={styles.fieldValue}>{classInfo.subject}</Text>
-          <Text style={styles.fieldSub}>{classInfo.teacher} • {classInfo.classroom}</Text>
+          <Text style={styles.fieldSub}>{classInfo.section} • {classInfo.teacher} • {classInfo.classroom}</Text>
 
           <View style={styles.divider} />
 
@@ -54,7 +54,7 @@ export default function StudentSuccessLateScreen({ navigation }) {
             <View>
               <Text style={styles.fieldLabel}>Hora de Escaneo</Text>
               <Text style={styles.timeValue}>10:14:18 AM</Text>
-              <Text style={styles.fieldSub}>Minuto 14 (Ventana Frontera)</Text>
+              <Text style={styles.fieldSub}>Minuto 14 de la clase</Text>
             </View>
 
             <View style={styles.statusBox}>

@@ -33,7 +33,7 @@ export default function StudentHomeScreen({ navigation }) {
           <View style={styles.headerRight}>
             <View style={styles.geofencePill}>
               <View style={styles.greenDot} />
-              <Text style={styles.geofenceText}>En Campus (Aula 204)</Text>
+              <Text style={styles.geofenceText}>En el Plantel (Aula 12)</Text>
             </View>
             <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
               <LogOut size={18} color="#64748b" />
@@ -80,9 +80,9 @@ export default function StudentHomeScreen({ navigation }) {
           <ChevronRight size={22} color="#ffffff" />
         </TouchableOpacity>
 
-        {/* Tu Asistencia Global del Semestre */}
+        {/* Tu Asistencia Global del Año Escolar */}
         <View style={styles.attendanceCard}>
-          <Text style={styles.attendanceCardTitle}>TU ASISTENCIA GLOBAL DEL SEMESTRE</Text>
+          <Text style={styles.attendanceCardTitle}>TU ASISTENCIA DEL AÑO ESCOLAR</Text>
 
           <View style={styles.attendanceStatsRow}>
             <View>
