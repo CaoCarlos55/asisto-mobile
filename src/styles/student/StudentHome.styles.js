@@ -171,7 +171,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
     ...theme.shadows.floating
   },
   scanIconBox: {
@@ -195,28 +195,6 @@ export const styles = StyleSheet.create({
   scanBtnSub: {
     fontSize: 12,
     color: '#bfdbfe'
-  },
-  manualEntryLink: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#eff6ff',
-    borderWidth: 1,
-    borderColor: '#bfdbfe',
-    borderRadius: theme.borderRadius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: theme.spacing.lg
-  },
-  manualEntryIcon: {
-    marginRight: 6
-  },
-  manualEntryLinkText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1d4ed8',
-    textAlign: 'center'
   },
   attendanceCard: {
     backgroundColor: theme.colors.surface,

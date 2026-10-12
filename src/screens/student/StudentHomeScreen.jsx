@@ -7,7 +7,7 @@ import {
   ScrollView,
   Alert
 } from 'react-native'
-import { QrCode, FileText, ChevronRight, AlertCircle, LogOut, Check, RotateCcw, Keyboard } from 'lucide-react-native'
+import { QrCode, FileText, ChevronRight, AlertCircle, LogOut, Check, RotateCcw } from 'lucide-react-native'
 import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentHome.styles'
@@ -174,27 +174,6 @@ export default function StudentHomeScreen({ navigation }) {
             </Text>
           </View>
           <ChevronRight size={22} color="#ffffff" />
-        </TouchableOpacity>
-
-        {/* Opción de contingencia si falla la cámara */}
-        <TouchableOpacity
-          style={styles.manualEntryLink}
-          onPress={() => {
-            if (isClosed) {
-              Alert.alert(
-                'Sesión Cerrada',
-                'El docente ya ejecutó el cierre definitivo de registro.'
-              )
-            } else {
-              navigation.navigate('StudentScanner', { openManual: true })
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Keyboard size={15} color="#1d4ed8" style={styles.manualEntryIcon} />
-          <Text style={styles.manualEntryLinkText}>
-            ¿Problemas con tu cámara? Ingresar código manual
-          </Text>
         </TouchableOpacity>
 
         {/* Tu Asistencia Global del Año Escolar */}
