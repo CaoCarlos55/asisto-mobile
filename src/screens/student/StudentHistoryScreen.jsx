@@ -185,11 +185,6 @@ export default function StudentHistoryScreen({ navigation }) {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
 
         <Text style={styles.footerNote}>
           Los registros se sincronizan con las actas de Coordinación

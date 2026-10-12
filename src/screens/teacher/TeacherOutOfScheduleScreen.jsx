@@ -13,10 +13,10 @@ import { styles } from '../../styles/teacher/TeacherOutOfSchedule.styles'
 
 export default function TeacherOutOfScheduleScreen({ navigation }) {
   const { currentUser, logout } = useAuth()
-  const { setSessionStatus } = useClassSession()
+  const { resetSession } = useClassSession()
 
-  const handleSimulateClassStart = () => {
-    setSessionStatus('active')
+  const handleSimulateClassStart = async () => {
+    await resetSession()
     navigation.navigate('TeacherDashboard')
   }
 
@@ -92,7 +92,7 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <RefreshCw size={18} color="#1e3a8a" style={styles.btnIcon} />
-          <Text style={styles.verifyBtnText}>Verificar Bloque Horario</Text>
+          <Text style={styles.verifyBtnText}>Iniciar Clase (Restaurar Nómina)</Text>
         </TouchableOpacity>
 
         <Text style={styles.footerNote}>

@@ -265,6 +265,22 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.textMuted,
     textAlign: 'center',
+    marginBottom: theme.spacing.md
+  },
+  resetSimBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingVertical: 12,
     marginBottom: theme.spacing.xl
+  },
+  resetSimBtnText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '700'
   }
 })

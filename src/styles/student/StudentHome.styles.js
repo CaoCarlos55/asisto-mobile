@@ -268,6 +268,52 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.textMuted,
     textAlign: 'center',
+    marginBottom: theme.spacing.md
+  },
+  registeredAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  registeredAlertText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803d'
+  },
+  closedAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  closedAlertText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#b91c1c'
+  },
+  resetSimBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingVertical: 11,
     marginBottom: theme.spacing.xl
+  },
+  resetSimBtnText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '700'
   }
 })

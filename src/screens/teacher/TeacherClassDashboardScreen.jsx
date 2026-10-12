@@ -4,14 +4,15 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native'
-import { QrCode, Users, FileText, Lock, ChevronRight, Clock } from 'lucide-react-native'
+import { QrCode, Users, FileText, Lock, ChevronRight, Clock, RotateCcw } from 'lucide-react-native'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/teacher/TeacherClassDashboard.styles'
 
 export default function TeacherClassDashboardScreen({ navigation }) {
-  const { classInfo, metrics } = useClassSession()
+  const { classInfo, metrics, resetSession } = useClassSession()
 
   const progressPercent = `${Math.min(100, Math.round((metrics.presents / (metrics.total || 1)) * 100))}%`
 
@@ -150,6 +151,19 @@ export default function TeacherClassDashboardScreen({ navigation }) {
         <Text style={styles.closeBtnNote}>
           Bloquea la nómina, invalida el QR y envía a Coordinación
         </Text>
+
+        {/* Botón Reiniciar Nómina de Prueba */}
+        <TouchableOpacity
+          style={styles.resetSimBtn}
+          onPress={async () => {
+            await resetSession()
+            Alert.alert('Nómina Reiniciada', 'La nómina, asistencias y código QR han vuelto al estado inicial de prueba.')
+          }}
+          activeOpacity={0.8}
+        >
+          <RotateCcw size={16} color="#64748b" style={styles.btnIcon} />
+          <Text style={styles.resetSimBtnText}>Reiniciar Nómina y QR (Modo Prueba)</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   )

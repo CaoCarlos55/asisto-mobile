@@ -4,7 +4,8 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native'
 import { ChevronLeft, Zap, ZapOff, MapPin } from 'lucide-react-native'
 import Svg, { Rect, Line } from 'react-native-svg'
@@ -14,13 +15,20 @@ import { styles } from '../../styles/student/StudentScanner.styles'
 const { width } = Dimensions.get('window')
 
 export default function StudentScannerScreen({ navigation }) {
-  const { classInfo, registerStudentAttendance } = useClassSession()
+  const { classInfo, registerStudentAttendance, sessionStatus } = useClassSession()
   const [torchOn, setTorchOn] = useState(false)
   const [distanceMeters] = useState(6)
 
   const scannerSize = Math.min(width * 0.72, 230)
 
   const handleSimulateScan = (scenarioMinute = 5) => {
+    if (sessionStatus === 'closed' || sessionStatus === 'cancelled') {
+      Alert.alert(
+        'QR Inerte • Sesión Cerrada',
+        'El docente ya ejecutó el cierre definitivo de la sesión. El código QR ha quedado inerte y no acepta más asistencias.'
+      )
+      return
+    }
     if (scenarioMinute <= 10) {
       registerStudentAttendance('29.842.119', 'present_qr', '10:05 AM')
       navigation.replace('StudentSuccessPresent')

@@ -175,6 +175,33 @@ export function ClassSessionProvider({ children }) {
     })
   }
 
+  const resetSession = async () => {
+    setSessionStatus('active')
+    setClassInfo({
+      subject: 'Matemáticas',
+      section: '4to Año • Sección B',
+      classroom: 'Aula 12',
+      timeBlock: '07:30 - 09:00 AM',
+      teacher: 'Prof. Roberto García',
+      qrStatus: 'Activo',
+      elapsedMinutes: 5,
+      isLive: true
+    })
+    setStudents(INITIAL_STUDENTS)
+    setCancellationReason('')
+    setLogbook({
+      subject: 'Matemáticas',
+      topic: 'Tema programático del día\nDesarrollo de contenidos y actividades prácticas',
+      incidentType: 'Clase sin novedades',
+      observations: 'Desarrollo normal de la sesión pedagógica según la planificación curricular. Participación activa de los estudiantes en las actividades propuestas.'
+    })
+    try {
+      await AsyncStorage.removeItem('asisto_session_state')
+    } catch (e) {
+      console.warn('Error al limpiar estado local:', e)
+    }
+  }
+
   const metrics = {
     total: students.length,
     presents: students.filter(s => s.status === 'present_qr' || s.status === 'present_manual').length,
@@ -200,7 +227,8 @@ export function ClassSessionProvider({ children }) {
         markManualAttendance,
         saveLogbook,
         executeFinalClosure,
-        registerStudentAttendance
+        registerStudentAttendance,
+        resetSession
       }}
     >
       {children}

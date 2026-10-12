@@ -4,16 +4,24 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native'
-import { QrCode, FileText, ChevronRight, AlertCircle, LogOut } from 'lucide-react-native'
+import { QrCode, FileText, ChevronRight, AlertCircle, LogOut, Check, RotateCcw } from 'lucide-react-native'
 import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentHome.styles'
 
 export default function StudentHomeScreen({ navigation }) {
   const { currentUser, logout } = useAuth()
-  const { classInfo } = useClassSession()
+  const { classInfo, sessionStatus, students, resetSession } = useClassSession()
+
+  const studentRecord = students.find(
+    s => s.name.toLowerCase().includes('daniel álvarez') || s.ci.includes('29.842.119')
+  )
+  const isPresent = studentRecord?.status === 'present_qr' || studentRecord?.status === 'present_manual'
+  const isLate = studentRecord?.status === 'late'
+  const isClosed = sessionStatus === 'closed' || sessionStatus === 'cancelled'
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -45,9 +53,13 @@ export default function StudentHomeScreen({ navigation }) {
         <View style={styles.currentClassCard}>
           <View style={styles.classCardHeader}>
             <View style={styles.inCourseBadge}>
-              <Text style={styles.inCourseText}>CLASE EN CURSO AHORA</Text>
+              <Text style={styles.inCourseText}>
+                {isClosed ? 'SESIÓN FINALIZADA' : 'CLASE EN CURSO AHORA'}
+              </Text>
             </View>
-            <Text style={styles.minuteBadge}>Minuto 4 / 10</Text>
+            <Text style={styles.minuteBadge}>
+              {isClosed ? 'Registro Cerrado' : 'Minuto 4 / 10'}
+            </Text>
           </View>
 
           <Text style={styles.subjectTitle}>{classInfo.subject}</Text>
@@ -56,18 +68,50 @@ export default function StudentHomeScreen({ navigation }) {
             {classInfo.classroom} • Bloque {classInfo.timeBlock}
           </Text>
 
-          <View style={styles.unregisteredAlert}>
-            <AlertCircle size={15} color="#b45309" style={styles.alertIcon} />
-            <Text style={styles.unregisteredAlertText}>
-              Aún no has registrado asistencia
-            </Text>
-          </View>
+          {isPresent ? (
+            <View style={styles.registeredAlert}>
+              <Check size={15} color="#15803d" style={styles.alertIcon} />
+              <Text style={styles.registeredAlertText}>
+                ¡Asistencia confirmada para la clase de hoy!
+              </Text>
+            </View>
+          ) : isLate ? (
+            <View style={styles.unregisteredAlert}>
+              <AlertCircle size={15} color="#b45309" style={styles.alertIcon} />
+              <Text style={styles.unregisteredAlertText}>
+                Asistencia registrada con Retardo (Min 14)
+              </Text>
+            </View>
+          ) : isClosed ? (
+            <View style={styles.closedAlert}>
+              <AlertCircle size={15} color="#b91c1c" style={styles.alertIcon} />
+              <Text style={styles.closedAlertText}>
+                Sesión cerrada por el profesor • Estado: Inasistencia
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.unregisteredAlert}>
+              <AlertCircle size={15} color="#b45309" style={styles.alertIcon} />
+              <Text style={styles.unregisteredAlertText}>
+                Aún no has registrado asistencia
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Botón Principal de Escaneo QR (HU06, HU07, HU08) */}
         <TouchableOpacity
           style={styles.scanBtn}
-          onPress={() => navigation.navigate('StudentScanner')}
+          onPress={() => {
+            if (isClosed) {
+              Alert.alert(
+                'Sesión Cerrada',
+                'El docente ya ejecutó el cierre definitivo de registro. El código QR ha quedado inerte y los alumnos pendientes pasaron a Inasistencia.'
+              )
+            } else {
+              navigation.navigate('StudentScanner')
+            }
+          }}
           activeOpacity={0.88}
         >
           <View style={styles.scanIconBox}>
@@ -75,7 +119,9 @@ export default function StudentHomeScreen({ navigation }) {
           </View>
           <View style={styles.scanBtnInfo}>
             <Text style={styles.scanBtnTitle}>Escanear Código QR</Text>
-            <Text style={styles.scanBtnSub}>Enfoca el código del profesor</Text>
+            <Text style={styles.scanBtnSub}>
+              {isClosed ? 'Sesión cerrada • QR Inerte' : 'Enfoca el código del profesor'}
+            </Text>
           </View>
           <ChevronRight size={22} color="#ffffff" />
         </TouchableOpacity>
@@ -121,6 +167,22 @@ export default function StudentHomeScreen({ navigation }) {
         <Text style={styles.footerNote}>
           Recuerda escanear durante los primeros 10 min para registrar asistencia sin penalización
         </Text>
+
+        {/* Botón Reiniciar Simulación de Prueba */}
+        <TouchableOpacity
+          style={styles.resetSimBtn}
+          onPress={async () => {
+            await resetSession()
+            Alert.alert(
+              'Simulación Reiniciada',
+              'La nómina de alumnos y la sesión de clase han vuelto al estado inicial para probar.'
+            )
+          }}
+          activeOpacity={0.8}
+        >
+          <RotateCcw size={16} color="#64748b" style={styles.alertIcon} />
+          <Text style={styles.resetSimBtnText}>Reiniciar Simulación de Prueba (Reset)</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   )
