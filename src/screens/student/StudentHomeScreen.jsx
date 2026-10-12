@@ -246,13 +246,13 @@ export default function StudentHomeScreen({ navigation }) {
             await resetSession()
             Alert.alert(
               'Simulación Reiniciada',
-              'La nómina de alumnos y la sesión de clase han vuelto al estado inicial para probar.'
+              'El alumno ha vuelto al estado pendiente y se limpiaron las incidencias previas. ¡Ya puedes probar nuevamente el escaneo o justificativo!'
             )
           }}
           activeOpacity={0.8}
         >
-          <RotateCcw size={16} color="#64748b" style={styles.alertIcon} />
-          <Text style={styles.resetSimBtnText}>Reiniciar Simulación de Prueba (Reset)</Text>
+          <RotateCcw size={16} color="#475569" style={styles.alertIcon} />
+          <Text style={styles.resetSimBtnText}>Reiniciar Estado del Alumno (Probar de nuevo)</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

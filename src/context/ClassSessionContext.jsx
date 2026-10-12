@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../api/supabaseClient'
 import { cancelClassroomSession, closeClassroomSession, sendAttendanceLog } from '../api/api'
@@ -64,10 +64,18 @@ export function ClassSessionProvider({ children }) {
   })
 
   const [cancellationReason, setCancellationReason] = useState('')
+  const [lastIncidentReset, setLastIncidentReset] = useState(null)
+  const lastIncidentResetRef = useRef(null)
 
   useEffect(() => {
     async function loadStoredClass() {
       try {
+        const storedReset = await AsyncStorage.getItem('asisto_last_incident_reset')
+        if (storedReset) {
+          setLastIncidentReset(storedReset)
+          lastIncidentResetRef.current = storedReset
+        }
+
         const stored = await AsyncStorage.getItem('asisto_session_state')
         if (stored) {
           const parsed = JSON.parse(stored)
@@ -107,10 +115,13 @@ export function ClassSessionProvider({ children }) {
 
         if (error || !data || !isMounted) return
 
+        const activeResetTime = lastIncidentResetRef.current || lastIncidentReset
         const studentIncident = data.find(
           item =>
-            item.student_name?.toLowerCase().includes('daniel álvarez') ||
-            item.student_ci?.includes('29.842.119')
+            (item.student_name?.toLowerCase().includes('daniel') ||
+             item.student_ci?.includes('29.842.119') ||
+             item.student_ci?.includes('28.452.190')) &&
+            (!activeResetTime || new Date(item.created_at) > new Date(activeResetTime))
         )
 
         if (studentIncident) {
@@ -331,6 +342,9 @@ export function ClassSessionProvider({ children }) {
   }
 
   const resetSession = async () => {
+    const now = new Date().toISOString()
+    setLastIncidentReset(now)
+    lastIncidentResetRef.current = now
     setSessionStatus('active')
     setClassInfo({
       subject: 'Matemáticas',
@@ -352,6 +366,13 @@ export function ClassSessionProvider({ children }) {
     })
     try {
       await AsyncStorage.removeItem('asisto_session_state')
+      await AsyncStorage.setItem('asisto_last_incident_reset', now)
+      if (supabase) {
+        await supabase
+          .from('incidents')
+          .delete()
+          .ilike('student_name', '%daniel%')
+      }
     } catch (e) {
       console.warn('Error al limpiar estado local:', e)
     }

@@ -5,9 +5,12 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Modal,
+  StatusBar,
+  Platform
 } from 'react-native'
-import { ChevronLeft, Maximize2, AlertOctagon, Check, Clock } from 'lucide-react-native'
+import { ChevronLeft, Maximize2, Minimize2, AlertOctagon, Check, Clock } from 'lucide-react-native'
 import QRCodeView from '../../components/QRCodeView'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/teacher/TeacherQR.styles'
@@ -17,7 +20,9 @@ const { width } = Dimensions.get('window')
 export default function TeacherQRScreen({ navigation }) {
   const { classInfo, metrics, qrToken, qrSecondsRemaining } = useClassSession()
   const [seconds, setSeconds] = useState(515) // 08:35
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const qrSize = Math.min(width * 0.62, 230)
+  const fullscreenQrSize = Math.min(width * 0.78, 300)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,6 +35,22 @@ export default function TeacherQRScreen({ navigation }) {
     const m = Math.floor(sec / 60)
     const s = sec % 60
     return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`
+  }
+
+  const handleToggleFullscreen = () => {
+    const next = !isFullscreen
+    setIsFullscreen(next)
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      try {
+        if (next && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {})
+        } else if (!next && document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {})
+        }
+      } catch (e) {
+        // Ignorar excepciones en navegadores con políticas restrictivas
+      }
+    }
   }
 
   return (
@@ -88,7 +109,11 @@ export default function TeacherQRScreen({ navigation }) {
           </View>
 
           {/* Botón Pantalla Completa */}
-          <TouchableOpacity style={styles.fullScreenBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.fullScreenBtn}
+            onPress={handleToggleFullscreen}
+            activeOpacity={0.85}
+          >
             <Maximize2 size={16} color="#ffffff" style={styles.btnIcon} />
             <Text style={styles.fullScreenBtnText}>Modo Pantalla Completa</Text>
           </TouchableOpacity>
@@ -113,6 +138,64 @@ export default function TeacherQRScreen({ navigation }) {
           Los estudiantes deben escanear este código desde su app móvil
         </Text>
       </ScrollView>
+
+      {/* Modal de Pantalla Completa para Proyector / Pizarra (HU03) */}
+      <Modal
+        visible={isFullscreen}
+        animationType="fade"
+        transparent={false}
+        onRequestClose={handleToggleFullscreen}
+      >
+        <SafeAreaView style={styles.fullscreenModalArea}>
+          <StatusBar barStyle="light-content" backgroundColor="#0b1528" />
+
+          <View style={styles.fullscreenHeader}>
+            <View style={styles.fullscreenHeaderLeft}>
+              <Text style={styles.fullscreenClassTitle}>{classInfo.subject}</Text>
+              <Text style={styles.fullscreenClassSub}>
+                {classInfo.section} • {classInfo.classroom}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleToggleFullscreen}
+              style={styles.fullscreenExitBtn}
+              activeOpacity={0.8}
+            >
+              <Minimize2 size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.fullscreenExitBtnText}>Salir</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fullscreenCenter}>
+            <View style={styles.fullscreenTokenBadge}>
+              <View style={styles.greenMiniDot} />
+              <Text style={styles.fullscreenTokenText}>
+                TOKEN ACTIVO: #{qrToken} • Renueva en {qrSecondsRemaining}s
+              </Text>
+            </View>
+
+            <View style={styles.fullscreenQrBox}>
+              <QRCodeView
+                value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}`}
+                size={fullscreenQrSize}
+                color="#0b1528"
+              />
+            </View>
+
+            <View style={styles.fullscreenLiveCountPill}>
+              <Check size={16} color="#22c55e" style={{ marginRight: 6 }} />
+              <Text style={styles.fullscreenLiveCountText}>
+                {metrics.presents} de {metrics.total} estudiantes registrados
+              </Text>
+            </View>
+
+            <Text style={styles.fullscreenHint}>
+              Escanea desde la app Asisto móvil para registrar tu asistencia
+            </Text>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   )
 }

@@ -193,5 +193,103 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.textMuted,
     textAlign: 'center'
+  },
+  fullscreenModalArea: {
+    flex: 1,
+    backgroundColor: '#0b1528',
+    justifyContent: 'space-between',
+    padding: 20
+  },
+  fullscreenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    paddingBottom: 16
+  },
+  fullscreenHeaderLeft: {
+    flex: 1
+  },
+  fullscreenClassTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 2
+  },
+  fullscreenClassSub: {
+    fontSize: 13,
+    color: '#94a3b8',
+    fontWeight: '500'
+  },
+  fullscreenExitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: theme.borderRadius.full
+  },
+  fullscreenExitBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  fullscreenCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10
+  },
+  fullscreenTokenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 20
+  },
+  fullscreenTokenText: {
+    color: '#22c55e',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5
+  },
+  fullscreenQrBox: {
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 8,
+    marginBottom: 20
+  },
+  fullscreenLiveCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#13233f',
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: theme.borderRadius.full,
+    marginBottom: 16
+  },
+  fullscreenLiveCountText: {
+    color: '#bfdbfe',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  fullscreenHint: {
+    color: '#64748b',
+    fontSize: 12,
+    textAlign: 'center',
+    maxWidth: 280
   }
 })
