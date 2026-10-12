@@ -108,12 +108,14 @@ export function ClassSessionProvider({ children }) {
   }
 
   const [qrToken, setQrToken] = useState(() => Math.floor(100000 + Math.random() * 900000).toString())
+  const [previousQrToken, setPreviousQrToken] = useState(null)
   const [qrSecondsRemaining, setQrSecondsRemaining] = useState(15)
 
   useEffect(() => {
     const timer = setInterval(() => {
       setQrSecondsRemaining(prev => {
         if (prev <= 1) {
+          setPreviousQrToken(qrToken)
           setQrToken(Math.floor(100000 + Math.random() * 900000).toString())
           return 15
         }
@@ -121,7 +123,12 @@ export function ClassSessionProvider({ children }) {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [qrToken])
+
+  const validateQrToken = (entered) => {
+    const clean = (entered || '').toString().trim().replace(/[^0-9]/g, '')
+    return clean === qrToken || (previousQrToken && clean === previousQrToken)
+  }
 
   const cancelClass = async (reason) => {
     setCancellationReason(reason)
@@ -209,7 +216,8 @@ export function ClassSessionProvider({ children }) {
           ...s,
           status: status,
           time: time,
-          observations: observations
+          observations: observations,
+          contingency: status === 'present_manual' ? (observations || 'Falla en cámara móvil') : s.contingency
         }
       }
       return s
@@ -220,7 +228,7 @@ export function ClassSessionProvider({ children }) {
       studentCi,
       classroomId: 'aula-12',
       subject: classInfo.subject,
-      status: status === 'present_qr' ? 'presente' : status === 'late' ? 'retardo' : 'ausente'
+      status: (status === 'present_qr' || status === 'present_manual') ? 'presente' : status === 'late' ? 'retardo' : 'ausente'
     })
   }
 
@@ -280,7 +288,9 @@ export function ClassSessionProvider({ children }) {
         resetSession,
         registerIncident,
         qrToken,
-        qrSecondsRemaining
+        previousQrToken,
+        qrSecondsRemaining,
+        validateQrToken
       }}
     >
       {children}

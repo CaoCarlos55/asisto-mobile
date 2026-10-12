@@ -5,21 +5,33 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
-  Alert
+  Alert,
+  Modal,
+  TextInput
 } from 'react-native'
-import { ChevronLeft, Zap, ZapOff, MapPin } from 'lucide-react-native'
+import { ChevronLeft, Zap, ZapOff, MapPin, Keyboard, X } from 'lucide-react-native'
 import Svg, { Rect, Line } from 'react-native-svg'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentScanner.styles'
 
 const { width } = Dimensions.get('window')
 
-export default function StudentScannerScreen({ navigation }) {
-  const { classInfo, registerStudentAttendance, sessionStatus, qrToken, qrSecondsRemaining } = useClassSession()
+export default function StudentScannerScreen({ navigation, route }) {
+  const {
+    classInfo,
+    registerStudentAttendance,
+    sessionStatus,
+    qrToken,
+    qrSecondsRemaining,
+    validateQrToken
+  } = useClassSession()
+
   const [torchOn, setTorchOn] = useState(false)
   const [distanceMeters, setDistanceMeters] = useState(6)
-  const isWithinGeofence = distanceMeters <= 25
+  const [showManualModal, setShowManualModal] = useState(route?.params?.openManual || false)
+  const [manualCode, setManualCode] = useState('')
 
+  const isWithinGeofence = distanceMeters <= 25
   const scannerSize = Math.min(width * 0.72, 230)
 
   const handleSimulateScan = (scenarioMinute = 5) => {
@@ -44,6 +56,44 @@ export default function StudentScannerScreen({ navigation }) {
       navigation.replace('StudentSuccessPresent')
     } else if (scenarioMinute <= 20) {
       registerStudentAttendance('29.842.119', 'late', '10:14 AM')
+      navigation.replace('StudentSuccessLate')
+    } else {
+      navigation.replace('StudentIncidentForm')
+    }
+  }
+
+  const handleManualSubmit = (scenarioMinute = 5) => {
+    if (sessionStatus === 'closed' || sessionStatus === 'cancelled') {
+      Alert.alert(
+        'QR Inerte • Sesión Cerrada',
+        'El docente ya ejecutó el cierre definitivo de la sesión. El código ha quedado inerte y no acepta más asistencias.'
+      )
+      return
+    }
+
+    if (!isWithinGeofence) {
+      Alert.alert(
+        'Fuera de Geocerca (HU09)',
+        `Te encuentras a ${distanceMeters}m del aula (máximo permitido: 25m).\nDebes estar físicamente dentro del aula para registrar asistencia.`
+      )
+      return
+    }
+
+    if (!manualCode || !validateQrToken(manualCode)) {
+      Alert.alert(
+        'Código Inválido o Expirado',
+        'El código ingresado no coincide con el token activo en la pantalla del aula.\nVerifica los 6 dígitos que proyecta el profesor (se renueva dinámicamente cada 15s).'
+      )
+      return
+    }
+
+    setShowManualModal(false)
+
+    if (scenarioMinute <= 10) {
+      registerStudentAttendance('29.842.119', 'present_manual', '10:05 AM', 'Falla en cámara móvil')
+      navigation.replace('StudentSuccessPresent')
+    } else if (scenarioMinute <= 20) {
+      registerStudentAttendance('29.842.119', 'late', '10:14 AM', 'Falla en cámara móvil')
       navigation.replace('StudentSuccessLate')
     } else {
       navigation.replace('StudentIncidentForm')
@@ -139,6 +189,18 @@ export default function StudentScannerScreen({ navigation }) {
           </View>
         </TouchableOpacity>
 
+        {/* Botón de Contingencia: Ingreso Manual de Código */}
+        <TouchableOpacity
+          style={styles.manualEntryBtn}
+          onPress={() => setShowManualModal(true)}
+          activeOpacity={0.85}
+        >
+          <Keyboard size={18} color="#38bdf8" style={styles.btnIcon} />
+          <Text style={styles.manualEntryBtnText}>
+            ¿Cámara dañada? Ingresar código manual
+          </Text>
+        </TouchableOpacity>
+
         {/* Selector de Simulación de Escenarios IHC */}
         <View style={styles.simulationBar}>
           <Text style={styles.simLabel}>Probar Escenario:</Text>
@@ -165,6 +227,85 @@ export default function StudentScannerScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Modal de Ingreso Manual por Contingencia */}
+        <Modal
+          visible={showManualModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowManualModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderLeft}>
+                  <Keyboard size={20} color="#38bdf8" />
+                  <Text style={styles.modalTitle}>Ingreso Manual (Contingencia)</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  onPress={() => setShowManualModal(false)}
+                >
+                  <X size={20} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSubtitle}>
+                Escribe el código numérico de 6 dígitos que el profesor tiene proyectado en la pizarra del aula.
+              </Text>
+
+              <View style={styles.modalGeofenceRow}>
+                <View style={styles.greenDot} />
+                <Text style={styles.modalGeofenceText}>
+                  GPS: {isWithinGeofence ? 'Aula 12 (Dentro de geocerca permitida)' : 'Fuera del aula'}
+                </Text>
+              </View>
+
+              <TextInput
+                style={styles.modalInput}
+                placeholder="######"
+                placeholderTextColor="#475569"
+                value={manualCode}
+                onChangeText={setManualCode}
+                keyboardType="numeric"
+                maxLength={6}
+                autoFocus
+              />
+
+              <View style={styles.modalTokenHint}>
+                <Text style={styles.modalTokenHintText}>
+                  Token proyectado en aula: #{qrToken} • {qrSecondsRemaining}s
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalQuickFillBtn}
+                onPress={() => setManualCode(qrToken)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalQuickFillText}>
+                  Autocompletar Código Activo de Clase
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalSubmitBtn}
+                onPress={() => handleManualSubmit(5)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalSubmitBtnText}>Validar Asistencia</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowManualModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   )

@@ -191,5 +191,147 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 10.5,
     fontWeight: '700'
+  },
+  manualEntryBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12
+  },
+  btnIcon: {
+    marginRight: 8
+  },
+  manualEntryBtnText: {
+    color: '#38bdf8',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#131b2e',
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#1e293b'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginLeft: 6
+  },
+  modalCloseBtn: {
+    padding: 4
+  },
+  modalSubtitle: {
+    fontSize: 12.5,
+    color: '#94a3b8',
+    lineHeight: 18,
+    marginBottom: 14
+  },
+  modalGeofenceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(5, 150, 105, 0.15)',
+    borderWidth: 1,
+    borderColor: '#059669',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginBottom: 14
+  },
+  modalGeofenceText: {
+    fontSize: 11,
+    color: '#34d399',
+    fontWeight: '700',
+    marginLeft: 6
+  },
+  modalInput: {
+    backgroundColor: '#0a0f1d',
+    borderWidth: 1.5,
+    borderColor: '#38bdf8',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#ffffff',
+    textAlign: 'center',
+    letterSpacing: 6,
+    marginBottom: 10
+  },
+  modalTokenHint: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginBottom: 10
+  },
+  modalTokenHintText: {
+    fontSize: 11.5,
+    color: '#34d399',
+    fontWeight: '600'
+  },
+  modalQuickFillBtn: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    marginBottom: 14
+  },
+  modalQuickFillText: {
+    fontSize: 12,
+    color: '#38bdf8',
+    fontWeight: '700',
+    textDecorationLine: 'underline'
+  },
+  modalSubmitBtn: {
+    backgroundColor: '#0284c7',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8
+  },
+  modalSubmitBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800'
+  },
+  modalCancelBtn: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    alignItems: 'center'
+  },
+  modalCancelBtnText: {
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: '600'
   }
 })

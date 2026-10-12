@@ -146,7 +146,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.sm,
     ...theme.shadows.floating
   },
   scanIconBox: {
@@ -170,6 +170,19 @@ export const styles = StyleSheet.create({
   scanBtnSub: {
     fontSize: 12,
     color: '#bfdbfe'
+  },
+  manualEntryLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginBottom: theme.spacing.lg
+  },
+  manualEntryLinkText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginLeft: 6
   },
   attendanceCard: {
     backgroundColor: theme.colors.surface,
