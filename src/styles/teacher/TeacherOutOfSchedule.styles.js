@@ -7,7 +7,9 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   centerContainer: {
-    padding: theme.spacing.xl,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
     alignItems: 'center'
   },
   header: {
@@ -15,11 +17,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.xl
+    marginBottom: theme.spacing.lg
   },
   profileRow: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginRight: 12
   },
   avatar: {
     width: 44,
@@ -36,19 +40,32 @@ export const styles = StyleSheet.create({
     fontWeight: '800'
   },
   profileInfo: {
+    flex: 1,
     justifyContent: 'center'
   },
   profileName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: theme.colors.textPrimary
   },
   profileDept: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: theme.colors.textSecondary
   },
   logoutBtn: {
-    padding: theme.spacing.sm
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2
   },
   centerCard: {
     width: '100%',
@@ -206,6 +223,8 @@ export const styles = StyleSheet.create({
   footerNote: {
     fontSize: 11,
     color: theme.colors.textMuted,
-    textAlign: 'center'
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 8
   }
 })

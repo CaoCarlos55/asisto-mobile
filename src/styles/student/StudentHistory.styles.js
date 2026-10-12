@@ -88,11 +88,13 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.success,
     borderRadius: 4
   },
-  filtersRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  filtersContainer: {
     marginBottom: theme.spacing.lg
+  },
+  filtersScrollContent: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 12
   },
   filterChip: {
     paddingVertical: 6,
@@ -154,7 +156,8 @@ export const styles = StyleSheet.create({
     marginTop: 4
   },
   historyRight: {
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
+    flexShrink: 0
   },
   presentBadge: {
     flexDirection: 'row',

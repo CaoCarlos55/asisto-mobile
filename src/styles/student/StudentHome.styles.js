@@ -7,17 +7,21 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   container: {
-    padding: theme.spacing.xl
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 40
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.xl
+    marginBottom: theme.spacing.lg
   },
   profileRow: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginRight: 10
   },
   avatar: {
     width: 44,
@@ -33,6 +37,10 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800'
   },
+  profileInfo: {
+    flex: 1,
+    justifyContent: 'center'
+  },
   greeting: {
     fontSize: 12,
     color: theme.colors.textSecondary
@@ -43,15 +51,16 @@ export const styles = StyleSheet.create({
     color: theme.colors.textPrimary
   },
   headerRight: {
-    alignItems: 'flex-end',
-    gap: 6
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
   },
   geofencePill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.successBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
     borderColor: theme.colors.successBorder
@@ -64,12 +73,24 @@ export const styles = StyleSheet.create({
     marginRight: 6
   },
   geofenceText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '700',
     color: theme.colors.successText
   },
   logoutBtn: {
-    padding: theme.spacing.xs
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2
   },
   currentClassCard: {
     backgroundColor: theme.colors.surface,
@@ -84,7 +105,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.md,
+    flexWrap: 'wrap',
+    gap: 8
   },
   inCourseBadge: {
     backgroundColor: '#eff6ff',
@@ -92,18 +115,19 @@ export const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: theme.colors.primaryBorder
+    borderColor: '#bfdbfe',
+    maxWidth: '100%'
   },
   inCourseText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '800',
-    color: theme.colors.primary,
+    color: '#1d4ed8',
     letterSpacing: 0.5
   },
   minuteBadge: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.primaryLight
+    color: theme.colors.textSecondary
   },
   subjectTitle: {
     fontSize: 18,
@@ -123,16 +147,17 @@ export const styles = StyleSheet.create({
   },
   unregisteredAlert: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: theme.colors.warningBg,
     borderWidth: 1,
     borderColor: theme.colors.warningBorder,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: 12,
-    paddingVertical: 8
+    paddingVertical: 10
   },
   alertIcon: {
-    marginRight: 6
+    marginRight: 8,
+    marginTop: 2
   },
   unregisteredAlertText: {
     fontSize: 12,
@@ -285,33 +310,35 @@ export const styles = StyleSheet.create({
   },
   registeredAlert: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: 12,
-    paddingVertical: 8
+    paddingVertical: 10
   },
   registeredAlertText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#15803d'
+    color: '#15803d',
+    flex: 1
   },
   closedAlert: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: 12,
-    paddingVertical: 8
+    paddingVertical: 10
   },
   closedAlertText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#b91c1c'
+    color: '#b91c1c',
+    flex: 1
   },
   alertTextBox: {
     flex: 1,

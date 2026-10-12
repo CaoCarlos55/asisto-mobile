@@ -35,18 +35,18 @@ export default function StudentHomeScreen({ navigation }) {
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{currentUser?.initials || 'DA'}</Text>
             </View>
-            <View>
+            <View style={styles.profileInfo}>
               <Text style={styles.greeting}>¡Hola, Daniel!</Text>
-              <Text style={styles.name}>{currentUser?.name || 'Daniel Álvarez'}</Text>
+              <Text style={styles.name} numberOfLines={1}>{currentUser?.name || 'Daniel Álvarez'}</Text>
             </View>
           </View>
 
           <View style={styles.headerRight}>
             <View style={styles.geofencePill}>
               <View style={styles.greenDot} />
-              <Text style={styles.geofenceText}>En el Plantel (Aula 12)</Text>
+              <Text style={styles.geofenceText}>En Plantel</Text>
             </View>
-            <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+            <TouchableOpacity onPress={logout} style={styles.logoutBtn} activeOpacity={0.7} accessibilityLabel="Cerrar sesión">
               <LogOut size={18} color="#64748b" />
             </TouchableOpacity>
           </View>

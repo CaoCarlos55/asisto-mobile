@@ -23,7 +23,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8
   },
   livePill: {
     flexDirection: 'row',
@@ -90,7 +92,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 28
+    paddingBottom: 40
   },
   kpiCard: {
     backgroundColor: '#ffffff',
@@ -112,12 +114,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    marginBottom: 14
+    marginBottom: 14,
+    flexWrap: 'wrap',
+    gap: 8
   },
   kpiItem: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4
+    gap: 4,
+    flexShrink: 1
   },
   kpiValuePresent: {
     fontSize: 24,

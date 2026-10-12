@@ -7,7 +7,9 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   centerContainer: {
-    padding: theme.spacing.xl,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 40,
     alignItems: 'center'
   },
   resultIconCircle: {

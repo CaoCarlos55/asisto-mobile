@@ -5,7 +5,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList
+  FlatList,
+  ScrollView
 } from 'react-native'
 import { ChevronLeft, Search, Plus } from 'lucide-react-native'
 import { useClassSession } from '../../context/ClassSessionContext'
@@ -154,42 +155,48 @@ export default function TeacherRosterScreen({ navigation }) {
         </View>
 
         {/* Tabs de Filtro */}
-        <View style={styles.tabsRow}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'all' && styles.tabActive]}
-            onPress={() => setActiveTab('all')}
+        <View style={styles.tabsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsScrollContent}
           >
-            <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
-              Todos ({metrics.total})
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'all' && styles.tabActive]}
+              onPress={() => setActiveTab('all')}
+            >
+              <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
+                Todos ({metrics.total})
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'present' && styles.tabActive]}
-            onPress={() => setActiveTab('present')}
-          >
-            <Text style={[styles.tabText, activeTab === 'present' && styles.tabTextActive]}>
-              Presentes ({metrics.presents})
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'present' && styles.tabActive]}
+              onPress={() => setActiveTab('present')}
+            >
+              <Text style={[styles.tabText, activeTab === 'present' && styles.tabTextActive]}>
+                Presentes ({metrics.presents})
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'late' && styles.tabActive]}
-            onPress={() => setActiveTab('late')}
-          >
-            <Text style={[styles.tabText, activeTab === 'late' && styles.tabTextActive]}>
-              Retardos ({metrics.lates})
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'late' && styles.tabActive]}
+              onPress={() => setActiveTab('late')}
+            >
+              <Text style={[styles.tabText, activeTab === 'late' && styles.tabTextActive]}>
+                Retardos ({metrics.lates})
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
-            onPress={() => setActiveTab('pending')}
-          >
-            <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
-              Pend. ({metrics.pending})
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
+              onPress={() => setActiveTab('pending')}
+            >
+              <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
+                Pend. ({metrics.pending})
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {/* Lista de Alumnos */}

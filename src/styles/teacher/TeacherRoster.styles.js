@@ -9,7 +9,8 @@ export const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.md
+    paddingTop: theme.spacing.md,
+    paddingBottom: 24
   },
   headerRow: {
     flexDirection: 'row',
@@ -84,10 +85,13 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.textPrimary
   },
-  tabsRow: {
+  tabsContainer: {
+    marginBottom: theme.spacing.md
+  },
+  tabsScrollContent: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: theme.spacing.md
+    paddingRight: 12
   },
   tab: {
     paddingVertical: 6,
@@ -124,12 +128,14 @@ export const styles = StyleSheet.create({
   studentLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1
+    flex: 1,
+    marginRight: 8
   },
   studentInfo: {
     flex: 1
   },
   studentRight: {
+    flexShrink: 0,
     alignItems: 'flex-end'
   },
   avatar: {

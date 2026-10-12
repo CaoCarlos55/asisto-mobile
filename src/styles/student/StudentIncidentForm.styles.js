@@ -10,7 +10,9 @@ export const styles = StyleSheet.create({
     flex: 1
   },
   container: {
-    padding: theme.spacing.xl
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 40
   },
   header: {
     flexDirection: 'row',
@@ -136,17 +138,21 @@ export const styles = StyleSheet.create({
   },
   motivesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: theme.spacing.lg
   },
   motiveChip: {
     flex: 1,
-    paddingVertical: 8,
+    minWidth: 90,
+    paddingVertical: 9,
+    paddingHorizontal: 6,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.borderDark,
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   motiveChipSelected: {
     backgroundColor: '#eff6ff',

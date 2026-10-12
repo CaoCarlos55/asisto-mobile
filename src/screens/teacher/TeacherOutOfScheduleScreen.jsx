@@ -30,12 +30,12 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
               <Text style={styles.avatarText}>{currentUser?.initials || 'RG'}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{currentUser?.name || 'Prof. Roberto García'}</Text>
-              <Text style={styles.profileDept}>{currentUser?.dept || 'Área de Matemáticas • Año Escolar 2025-2026'}</Text>
+              <Text style={styles.profileName} numberOfLines={1}>{currentUser?.name || 'Prof. Roberto García'}</Text>
+              <Text style={styles.profileDept} numberOfLines={1}>{currentUser?.dept || 'Área de Matemáticas • Año Escolar 2025-2026'}</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <LogOut size={20} color="#64748b" />
+          <TouchableOpacity onPress={logout} style={styles.logoutBtn} activeOpacity={0.7} accessibilityLabel="Cerrar sesión">
+            <LogOut size={18} color="#64748b" />
           </TouchableOpacity>
         </View>
 

@@ -4,7 +4,8 @@ import {
   View,
   Text,
   TouchableOpacity,
-  FlatList
+  FlatList,
+  ScrollView
 } from 'react-native'
 import { ChevronLeft } from 'lucide-react-native'
 import { useClassSession } from '../../context/ClassSessionContext'
@@ -193,42 +194,48 @@ export default function StudentHistoryScreen({ navigation }) {
         </View>
 
         {/* Chips de Asignaturas */}
-        <View style={styles.filtersRow}>
-          <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'all' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('all')}
+        <View style={styles.filtersContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersScrollContent}
           >
-            <Text style={[styles.filterChipText, activeFilter === 'all' && styles.filterChipTextActive]}>
-              Todas
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, activeFilter === 'all' && styles.filterChipActive]}
+              onPress={() => setActiveFilter('all')}
+            >
+              <Text style={[styles.filterChipText, activeFilter === 'all' && styles.filterChipTextActive]}>
+                Todas
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'mat' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('mat')}
-          >
-            <Text style={[styles.filterChipText, activeFilter === 'mat' && styles.filterChipTextActive]}>
-              Matemáticas
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, activeFilter === 'mat' && styles.filterChipActive]}
+              onPress={() => setActiveFilter('mat')}
+            >
+              <Text style={[styles.filterChipText, activeFilter === 'mat' && styles.filterChipTextActive]}>
+                Matemáticas
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'fis' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('fis')}
-          >
-            <Text style={[styles.filterChipText, activeFilter === 'fis' && styles.filterChipTextActive]}>
-              Física
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, activeFilter === 'fis' && styles.filterChipActive]}
+              onPress={() => setActiveFilter('fis')}
+            >
+              <Text style={[styles.filterChipText, activeFilter === 'fis' && styles.filterChipTextActive]}>
+                Física
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'qui' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('qui')}
-          >
-            <Text style={[styles.filterChipText, activeFilter === 'qui' && styles.filterChipTextActive]}>
-              Química
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, activeFilter === 'qui' && styles.filterChipActive]}
+              onPress={() => setActiveFilter('qui')}
+            >
+              <Text style={[styles.filterChipText, activeFilter === 'qui' && styles.filterChipTextActive]}>
+                Química
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {/* Lista Histórica */}
