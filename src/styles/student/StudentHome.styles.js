@@ -197,17 +197,26 @@ export const styles = StyleSheet.create({
     color: '#bfdbfe'
   },
   manualEntryLink: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: theme.borderRadius.full,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     marginBottom: theme.spacing.lg
   },
+  manualEntryIcon: {
+    marginRight: 6
+  },
   manualEntryLinkText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.primary,
-    marginLeft: 6
+    color: '#1d4ed8',
+    textAlign: 'center'
   },
   attendanceCard: {
     backgroundColor: theme.colors.surface,

@@ -208,22 +208,28 @@ export default function StudentScannerScreen({ navigation, route }) {
             <TouchableOpacity
               style={styles.simBtnGreen}
               onPress={() => handleSimulateScan(5)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.simBtnText}>Min 5 (Tolerancia)</Text>
+              <Text style={styles.simBtnTitle}>Min 5</Text>
+              <Text style={styles.simBtnSub}>Tolerancia</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.simBtnAmber}
               onPress={() => handleSimulateScan(14)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.simBtnText}>Min 14 (Retardo)</Text>
+              <Text style={styles.simBtnTitle}>Min 14</Text>
+              <Text style={styles.simBtnSub}>Retardo</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.simBtnRed}
               onPress={() => handleSimulateScan(24)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.simBtnText}>Min 24 (Incidencia)</Text>
+              <Text style={styles.simBtnTitle}>Min 24</Text>
+              <Text style={styles.simBtnSub}>Incidencia</Text>
             </TouchableOpacity>
           </View>
         </View>

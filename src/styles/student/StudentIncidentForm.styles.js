@@ -108,6 +108,10 @@ export const styles = StyleSheet.create({
     padding: theme.spacing.md,
     marginBottom: theme.spacing.lg
   },
+  subjectInfo: {
+    flex: 1,
+    marginRight: 10
+  },
   subjectLabel: {
     fontSize: 10,
     fontWeight: '700',
@@ -120,10 +124,12 @@ export const styles = StyleSheet.create({
     color: theme.colors.textPrimary
   },
   roomBadge: {
+    flexShrink: 0,
     backgroundColor: theme.colors.dangerBg,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 8
+    borderRadius: 8,
+    alignSelf: 'center'
   },
   roomBadgeText: {
     fontSize: 11,
@@ -138,18 +144,17 @@ export const styles = StyleSheet.create({
   },
   motivesRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     marginBottom: theme.spacing.lg
   },
   motiveChip: {
     flex: 1,
-    minWidth: 90,
-    paddingVertical: 9,
-    paddingHorizontal: 6,
+    minHeight: 44,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: theme.colors.borderDark,
     alignItems: 'center',
     justifyContent: 'center'
@@ -161,7 +166,8 @@ export const styles = StyleSheet.create({
   motiveChipText: {
     fontSize: 11,
     color: '#475569',
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center'
   },
   motiveChipTextSelected: {
     color: '#1d4ed8',

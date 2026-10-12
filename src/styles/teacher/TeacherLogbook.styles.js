@@ -94,18 +94,22 @@ export const styles = StyleSheet.create({
   chipsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    rowGap: 8,
     marginBottom: theme.spacing.lg
   },
   chip: {
+    width: '48.5%',
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: theme.colors.borderDark,
     borderRadius: theme.borderRadius.md,
     paddingVertical: 8,
-    paddingHorizontal: 12
+    paddingHorizontal: 6
   },
   chipSelected: {
     backgroundColor: '#eff6ff',
@@ -115,9 +119,10 @@ export const styles = StyleSheet.create({
     marginRight: 6
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#475569',
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center'
   },
   chipTextSelected: {
     color: '#1d4ed8',

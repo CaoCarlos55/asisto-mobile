@@ -191,7 +191,7 @@ export default function StudentHomeScreen({ navigation }) {
           }}
           activeOpacity={0.7}
         >
-          <Keyboard size={16} color="#1d4ed8" style={styles.alertIcon} />
+          <Keyboard size={15} color="#1d4ed8" style={styles.manualEntryIcon} />
           <Text style={styles.manualEntryLinkText}>
             ¿Problemas con tu cámara? Ingresar código manual
           </Text>

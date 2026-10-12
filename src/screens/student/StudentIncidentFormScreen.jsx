@@ -124,9 +124,11 @@ export default function StudentIncidentFormScreen({ navigation }) {
 
             {/* Asignatura Vinculada */}
             <View style={styles.subjectBox}>
-              <View>
+              <View style={styles.subjectInfo}>
                 <Text style={styles.subjectLabel}>ASIGNATURA VINCULADA</Text>
-                <Text style={styles.subjectName}>{classInfo.subject} • {classInfo.teacher}</Text>
+                <Text style={styles.subjectName} numberOfLines={1}>
+                  {classInfo.subject} • {classInfo.teacher}
+                </Text>
               </View>
               <View style={styles.roomBadge}>
                 <Text style={styles.roomBadgeText}>{classInfo.classroom}</Text>

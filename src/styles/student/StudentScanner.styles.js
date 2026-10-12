@@ -156,7 +156,8 @@ export const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#131b2e',
     borderRadius: theme.borderRadius.md,
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     alignItems: 'center'
   },
   simLabel: {
@@ -167,30 +168,47 @@ export const styles = StyleSheet.create({
   },
   simButtonsRow: {
     flexDirection: 'row',
+    width: '100%',
     gap: 6
   },
   simBtnGreen: {
+    flex: 1,
     backgroundColor: '#059669',
     paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8
+    paddingHorizontal: 2,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   simBtnAmber: {
+    flex: 1,
     backgroundColor: '#d97706',
     paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8
+    paddingHorizontal: 2,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   simBtnRed: {
+    flex: 1,
     backgroundColor: '#dc2626',
     paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8
+    paddingHorizontal: 2,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  simBtnText: {
+  simBtnTitle: {
     color: '#ffffff',
-    fontSize: 10.5,
-    fontWeight: '700'
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center'
+  },
+  simBtnSub: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 9.5,
+    fontWeight: '600',
+    textAlign: 'center'
   },
   manualEntryBtn: {
     width: '100%',

@@ -97,7 +97,6 @@ export default function TeacherLogbookScreen({ navigation }) {
                   onPress={() => setSelectedIncident(type)}
                   activeOpacity={0.8}
                 >
-                  {isSelected && <Check size={14} color="#1d4ed8" style={styles.chipIcon} />}
                   <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
                     {type}
                   </Text>
