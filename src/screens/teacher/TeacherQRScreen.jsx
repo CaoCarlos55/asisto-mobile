@@ -8,7 +8,7 @@ import {
   Dimensions
 } from 'react-native'
 import { ChevronLeft, Maximize2, AlertOctagon, Check, Clock } from 'lucide-react-native'
-import Svg, { Rect } from 'react-native-svg'
+import QRCodeView from '../../components/QRCodeView'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/teacher/TeacherQR.styles'
 
@@ -17,6 +17,7 @@ const { width } = Dimensions.get('window')
 export default function TeacherQRScreen({ navigation }) {
   const { classInfo, metrics } = useClassSession()
   const [seconds, setSeconds] = useState(515) // 08:35
+  const qrSize = Math.min(width * 0.62, 230)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -59,33 +60,9 @@ export default function TeacherQRScreen({ navigation }) {
             <Text style={styles.timerText}>{formatTimer(seconds)} transcurridos</Text>
           </View>
 
-          {/* Gráfico QR estilizado de alta precisión */}
+          {/* Gráfico QR estilizado y nítido de alta precisión */}
           <View style={styles.qrContainer}>
-            <Svg width={width * 0.62} height={width * 0.62} viewBox="0 0 120 120">
-              {/* Esquinas */}
-              <Rect x="10" y="10" width="30" height="30" rx="4" fill="#0f172a" />
-              <Rect x="16" y="16" width="18" height="18" rx="2" fill="#ffffff" />
-              <Rect x="20" y="20" width="10" height="10" rx="1" fill="#0f172a" />
-
-              <Rect x="80" y="10" width="30" height="30" rx="4" fill="#0f172a" />
-              <Rect x="86" y="16" width="18" height="18" rx="2" fill="#ffffff" />
-              <Rect x="90" y="20" width="10" height="10" rx="1" fill="#0f172a" />
-
-              <Rect x="10" y="80" width="30" height="30" rx="4" fill="#0f172a" />
-              <Rect x="16" y="86" width="18" height="18" rx="2" fill="#ffffff" />
-              <Rect x="20" y="90" width="10" height="10" rx="1" fill="#0f172a" />
-
-              {/* Módulos */}
-              <Rect x="50" y="15" width="20" height="8" rx="2" fill="#0f172a" />
-              <Rect x="55" y="30" width="12" height="15" rx="2" fill="#0f172a" />
-              <Rect x="75" y="48" width="14" height="10" rx="2" fill="#0f172a" />
-              <Rect x="20" y="50" width="15" height="8" rx="2" fill="#0f172a" />
-              <Rect x="42" y="52" width="18" height="16" rx="2" fill="#0f172a" />
-              <Rect x="65" y="70" width="18" height="12" rx="2" fill="#0f172a" />
-              <Rect x="48" y="78" width="12" height="15" rx="2" fill="#0f172a" />
-              <Rect x="70" y="88" width="12" height="14" rx="2" fill="#0f172a" />
-              <Rect x="88" y="78" width="14" height="8" rx="2" fill="#0f172a" />
-            </Svg>
+            <QRCodeView size={qrSize} color="#0f172a" />
           </View>
 
           {/* Contador de registrados */}

@@ -62,10 +62,11 @@ export const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   scannerBox: {
-    width: width * 0.72,
-    height: width * 0.72,
+    width: Math.min(width * 0.72, 240),
+    height: Math.min(width * 0.72, 240),
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    position: 'relative'
   },
   scanSubject: {
     fontSize: 17,

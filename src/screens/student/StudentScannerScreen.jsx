@@ -18,6 +18,8 @@ export default function StudentScannerScreen({ navigation }) {
   const [torchOn, setTorchOn] = useState(false)
   const [distanceMeters] = useState(6)
 
+  const scannerSize = Math.min(width * 0.72, 230)
+
   const handleSimulateScan = (scenarioMinute = 5) => {
     if (scenarioMinute <= 10) {
       registerStudentAttendance('29.842.119', 'present_qr', '10:05 AM')
@@ -56,7 +58,7 @@ export default function StudentScannerScreen({ navigation }) {
         {/* Visor de Escaneo QR */}
         <View style={styles.scannerWrapper}>
           <View style={styles.scannerBox}>
-            <Svg width={width * 0.72} height={width * 0.72} viewBox="0 0 100 100">
+            <Svg width={scannerSize} height={scannerSize} viewBox="0 0 100 100">
               <Line x1="4" y1="4" x2="25" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
               <Line x1="4" y1="4" x2="4" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
