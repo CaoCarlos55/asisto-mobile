@@ -62,9 +62,13 @@ export default function TeacherQRScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* Gráfico QR estilizado y nítido de alta precisión */}
+          {/* Gráfico QR dinámico que rota con el token activo */}
           <View style={styles.qrContainer}>
-            <QRCodeView size={qrSize} color="#0f172a" />
+            <QRCodeView
+              value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}`}
+              size={qrSize}
+              color="#0f172a"
+            />
           </View>
 
           {/* Semilla de Token Dinámico (HU03) */}
