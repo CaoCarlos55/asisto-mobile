@@ -22,6 +22,8 @@ export default function StudentHomeScreen({ navigation }) {
   const isPresent = studentRecord?.status === 'present_qr' || studentRecord?.status === 'present_manual'
   const isLate = studentRecord?.status === 'late'
   const isInReview = studentRecord?.status === 'in_review'
+  const isRejected = studentRecord?.status === 'rejected' || studentRecord?.incidentStatus === 'Rechazada'
+  const isApproved = studentRecord?.incidentStatus === 'Aprobada'
   const isClosed = sessionStatus === 'closed' || sessionStatus === 'cancelled'
 
   return (
@@ -55,11 +57,27 @@ export default function StudentHomeScreen({ navigation }) {
           <View style={styles.classCardHeader}>
             <View style={styles.inCourseBadge}>
               <Text style={styles.inCourseText}>
-                {isClosed ? 'SESIÓN FINALIZADA' : isInReview ? 'JUSTIFICACIÓN EN CURSO' : 'CLASE EN CURSO AHORA'}
+                {isClosed
+                  ? 'SESIÓN FINALIZADA'
+                  : isRejected
+                  ? 'JUSTIFICACIÓN RECHAZADA'
+                  : isApproved
+                  ? 'JUSTIFICACIÓN APROBADA'
+                  : isInReview
+                  ? 'JUSTIFICACIÓN EN CURSO'
+                  : 'CLASE EN CURSO AHORA'}
               </Text>
             </View>
             <Text style={styles.minuteBadge}>
-              {isClosed ? 'Registro Cerrado' : isInReview ? 'En Revisión Coord.' : 'Minuto 4 / 10'}
+              {isClosed
+                ? 'Registro Cerrado'
+                : isRejected
+                ? 'Inasistencia Confirmada'
+                : isApproved
+                ? 'Asistencia Convalidada'
+                : isInReview
+                ? 'En Revisión Coord.'
+                : 'Minuto 4 / 10'}
             </Text>
           </View>
 
@@ -69,7 +87,31 @@ export default function StudentHomeScreen({ navigation }) {
             {classInfo.classroom} • Bloque {classInfo.timeBlock}
           </Text>
 
-          {isPresent ? (
+          {isRejected ? (
+            <View style={styles.closedAlert}>
+              <AlertCircle size={15} color="#b91c1c" style={styles.alertIcon} />
+              <View style={styles.alertTextBox}>
+                <Text style={styles.closedAlertText}>
+                  Justificación Rechazada por Coord. ({studentRecord?.incidentFolio || '#INC-2026-0842'})
+                </Text>
+                <Text style={styles.closedAlertSub}>
+                  Inasistencia confirmada. {studentRecord?.incidentNotes ? `Dictamen: "${studentRecord.incidentNotes}"` : ''}
+                </Text>
+              </View>
+            </View>
+          ) : isApproved ? (
+            <View style={styles.registeredAlert}>
+              <Check size={15} color="#15803d" style={styles.alertIcon} />
+              <View style={styles.alertTextBox}>
+                <Text style={styles.registeredAlertText}>
+                  ¡Justificación Aprobada por Coord.! ({studentRecord?.incidentFolio || '#INC-2026-0842'})
+                </Text>
+                <Text style={styles.approvedAlertSub}>
+                  Asistencia convalidada oficialmente. {studentRecord?.incidentNotes ? `Nota: "${studentRecord.incidentNotes}"` : ''}
+                </Text>
+              </View>
+            </View>
+          ) : isPresent ? (
             <View style={styles.registeredAlert}>
               <Check size={15} color="#15803d" style={styles.alertIcon} />
               <Text style={styles.registeredAlertText}>

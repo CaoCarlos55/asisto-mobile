@@ -92,10 +92,17 @@ export default function TeacherRosterScreen({ navigation }) {
             </View>
           )}
 
+          {item.status === 'rejected' && (
+            <View style={styles.rejectedBadge}>
+              <View style={styles.redDot} />
+              <Text style={styles.rejectedText}>Rechazada</Text>
+            </View>
+          )}
+
           {item.status === 'absent' && (
-            <View style={[styles.lateBadge, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}>
-              <View style={[styles.amberDot, { backgroundColor: '#dc2626' }]} />
-              <Text style={[styles.lateText, { color: '#dc2626' }]}>Ausente</Text>
+            <View style={styles.absentBadge}>
+              <View style={styles.redDot} />
+              <Text style={styles.absentText}>Ausente</Text>
             </View>
           )}
 

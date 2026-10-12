@@ -91,6 +91,104 @@ export function ClassSessionProvider({ children }) {
     loadStoredClass()
   }, [])
 
+  // Sincronización en tiempo real con Supabase para resoluciones de justificaciones (HU08)
+  useEffect(() => {
+    if (!supabase) return
+
+    let isMounted = true
+
+    const syncIncidents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('incidents')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (error || !data || !isMounted) return
+
+        const studentIncident = data.find(
+          item =>
+            item.student_name?.toLowerCase().includes('daniel álvarez') ||
+            item.student_ci?.includes('29.842.119')
+        )
+
+        if (studentIncident) {
+          setStudents(prev => {
+            const current = prev.find(
+              s => s.ci.includes('29.842.119') || s.name.toLowerCase().includes('daniel álvarez')
+            )
+            if (!current) return prev
+
+            if (
+              current.incidentStatus === studentIncident.status &&
+              current.incidentFolio === studentIncident.id
+            ) {
+              return prev
+            }
+
+            const updated = prev.map(s => {
+              if (s.ci.includes('29.842.119') || s.name.toLowerCase().includes('daniel álvarez')) {
+                if (studentIncident.status === 'Rechazada') {
+                  return {
+                    ...s,
+                    status: 'rejected',
+                    incidentStatus: 'Rechazada',
+                    incidentVerdict: studentIncident.official_verdict || 'Rechazar',
+                    incidentNotes: studentIncident.official_notes || 'Rechazada por Coordinación Docente',
+                    incidentFolio: studentIncident.id
+                  }
+                } else if (studentIncident.status === 'Aprobada') {
+                  return {
+                    ...s,
+                    status: 'present_manual',
+                    incidentStatus: 'Aprobada',
+                    incidentVerdict: studentIncident.official_verdict || 'Aprobar',
+                    incidentNotes: studentIncident.official_notes || 'Aprobada por Coordinación Docente',
+                    incidentFolio: studentIncident.id,
+                    contingency: 'Justificación Aprobada por Coordinación'
+                  }
+                } else if (studentIncident.status === 'Pendiente') {
+                  return {
+                    ...s,
+                    status: 'in_review',
+                    incidentStatus: 'Pendiente',
+                    incidentFolio: studentIncident.id
+                  }
+                }
+              }
+              return s
+            })
+            persistOffline(updated)
+            return updated
+          })
+        }
+      } catch (e) {
+        // Fallback silencioso
+      }
+    }
+
+    syncIncidents()
+    const interval = setInterval(syncIncidents, 3000)
+
+    const channel = supabase
+      .channel('mobile_incidents_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'incidents' },
+        () => {
+          syncIncidents()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
   const persistOffline = async (newStudents, newStatus, newLogbook) => {
     try {
       await AsyncStorage.setItem(

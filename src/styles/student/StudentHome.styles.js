@@ -313,6 +313,20 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#b91c1c'
   },
+  alertTextBox: {
+    flex: 1,
+    marginLeft: 6
+  },
+  closedAlertSub: {
+    fontSize: 11,
+    color: '#991b1b',
+    marginTop: 2
+  },
+  approvedAlertSub: {
+    fontSize: 11,
+    color: '#166534',
+    marginTop: 2
+  },
   resetSimBtn: {
     flexDirection: 'row',
     alignItems: 'center',

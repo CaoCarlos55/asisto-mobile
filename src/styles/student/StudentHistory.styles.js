@@ -213,6 +213,43 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.primaryLight
   },
+  rejectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: '#fca5a5'
+  },
+  redDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#dc2626',
+    marginRight: 6
+  },
+  rejectedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dc2626'
+  },
+  approvedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: '#a7f3d0'
+  },
+  approvedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669'
+  },
   listContent: {
     paddingBottom: 40
   },

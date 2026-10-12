@@ -73,20 +73,26 @@ export default function StudentHistoryScreen({ navigation }) {
       const isPresent = studentRecord.status === 'present_qr' || studentRecord.status === 'present_manual'
       const isLate = studentRecord.status === 'late'
       const isInReview = studentRecord.status === 'in_review'
+      const isRejected = studentRecord.status === 'rejected' || studentRecord.incidentStatus === 'Rechazada'
+      const isApproved = studentRecord.incidentStatus === 'Aprobada'
       const activeItem = {
         id: 'h-active',
         subject: classInfo.subject,
         filterKey: 'mat',
         sub: `${classInfo.section} • ${classInfo.classroom} • ${classInfo.teacher}`,
         time: `Hoy ${studentRecord.time || '10:05 AM'} • ${
+          isRejected ? `Rechazada (${studentRecord.incidentFolio || '#INC-2026-0842'})` :
+          isApproved ? `Justificada (${studentRecord.incidentFolio || '#INC-2026-0842'})` :
           isPresent ? (studentRecord.status === 'present_manual' ? 'Marcado Manual por Docente' : 'Escaneo puntual en aula') :
           isLate ? 'Registro con Retardo' :
           isInReview ? `Justificación en revisión (${studentRecord.incidentFolio || '#INC-2026-0842'})` :
           'Inasistencia'
         }`,
-        note: isInReview ? `Motivo: ${studentRecord.incidentMotive || 'Salud / Médico'}` : undefined,
-        status: studentRecord.status,
-        statusText: isPresent ? 'Asistió (QR)' : isLate ? 'Retardo' : isInReview ? 'En revisión Coord.' : 'Inasistencia'
+        note: isRejected ? `Dictamen Coord.: ${studentRecord.incidentNotes || 'Inasistencia confirmada'}` :
+              isApproved ? `Dictamen Coord.: Asistencia convalidada (${studentRecord.incidentNotes || 'Aprobada'})` :
+              isInReview ? `Motivo: ${studentRecord.incidentMotive || 'Salud / Médico'}` : undefined,
+        status: isRejected ? 'rejected' : isApproved ? 'approved' : studentRecord.status,
+        statusText: isRejected ? 'Rechazada' : isApproved ? 'Justificada' : isPresent ? 'Asistió (QR)' : isLate ? 'Retardo' : isInReview ? 'En revisión Coord.' : 'Inasistencia'
       }
       list = [activeItem, ...list.filter(item => item.id !== 'h1')]
     }
@@ -101,6 +107,8 @@ export default function StudentHistoryScreen({ navigation }) {
     const isPresent = item.status === 'present_qr'
     const isLate = item.status === 'late'
     const isInReview = item.status === 'in_review'
+    const isRejected = item.status === 'rejected'
+    const isApproved = item.status === 'approved'
 
     return (
       <View style={styles.historyCard}>
@@ -112,6 +120,20 @@ export default function StudentHistoryScreen({ navigation }) {
         </View>
 
         <View style={styles.historyRight}>
+          {isRejected && (
+            <View style={styles.rejectedBadge}>
+              <View style={styles.redDot} />
+              <Text style={styles.rejectedBadgeText}>Rechazada</Text>
+            </View>
+          )}
+
+          {isApproved && (
+            <View style={styles.approvedBadge}>
+              <View style={styles.greenDot} />
+              <Text style={styles.approvedBadgeText}>Justificada</Text>
+            </View>
+          )}
+
           {isPresent && (
             <View style={styles.presentBadge}>
               <View style={styles.greenDot} />
