@@ -18,24 +18,35 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.xl
   },
-  logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary,
+  brandIconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    backgroundColor: '#1d4ed8',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.floating
+    marginBottom: 8,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4
+  },
+  brandTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0f172a',
+    letterSpacing: -0.5,
+    marginBottom: 2
   },
   title: {
-    fontSize: theme.typography.titleLarge.fontSize,
-    fontWeight: theme.typography.titleLarge.fontWeight,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 4
   },
   subtitle: {
-    fontSize: theme.typography.bodySmall.fontSize,
+    fontSize: 12,
     color: theme.colors.textSecondary,
     textAlign: 'center'
   },

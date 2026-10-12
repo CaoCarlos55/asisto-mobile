@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView
 } from 'react-native'
-import { GraduationCap, Mail, Lock, Eye, EyeOff } from 'lucide-react-native'
+import { SquareCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react-native'
 import { useAuth } from '../../context/AuthContext'
 import { styles } from '../../styles/auth/TeacherLogin.styles'
 
@@ -30,13 +30,14 @@ export default function TeacherLoginScreen({ navigation }) {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.container}>
-          {/* Header con icono y títulos */}
+          {/* Header con isotipo oficial Asisto */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <GraduationCap size={36} color="#ffffff" />
+            <View style={styles.brandIconBox}>
+              <SquareCheck size={32} color="#ffffff" strokeWidth={2.5} />
             </View>
+            <Text style={styles.brandTitle}>Asisto</Text>
             <Text style={styles.title}>Portal Docente</Text>
-            <Text style={styles.subtitle}>Control de Asistencia y Gestión de Aula</Text>
+            <Text style={styles.subtitle}>Ecosistema Escolar • Control de Asistencia y Aula</Text>
           </View>
 
           {/* Tarjeta de Formulario */}
