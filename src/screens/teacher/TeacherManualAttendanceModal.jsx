@@ -1,9 +1,9 @@
+import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState } from 'react'
 import {
   View,
   Text,
-  TouchableOpacity,
-  SafeAreaView
+  TouchableOpacity
 } from 'react-native'
 import { UserCheck, Info, Check } from 'lucide-react-native'
 import { useClassSession } from '../../context/ClassSessionContext'

@@ -1,9 +1,9 @@
+import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   FlatList
 } from 'react-native'
 import { ChevronLeft } from 'lucide-react-native'

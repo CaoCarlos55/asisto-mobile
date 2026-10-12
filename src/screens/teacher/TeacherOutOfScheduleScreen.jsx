@@ -1,9 +1,9 @@
+import { SafeAreaView } from 'react-native-safe-area-context'
 import React from 'react'
 import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView
 } from 'react-native'
 import { Clock, AlertTriangle, RefreshCw, LogOut, MapPin } from 'lucide-react-native'
