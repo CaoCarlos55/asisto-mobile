@@ -139,6 +139,19 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#34d399'
   },
+  invalidBadge: {
+    backgroundColor: '#450a0a',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#dc2626'
+  },
+  invalidBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#f87171'
+  },
   simulationBar: {
     width: '100%',
     backgroundColor: '#131b2e',

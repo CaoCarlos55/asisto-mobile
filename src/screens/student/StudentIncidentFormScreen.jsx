@@ -13,12 +13,13 @@ import {
 import { ChevronLeft, Upload } from 'lucide-react-native'
 import * as DocumentPicker from 'expo-document-picker'
 import { useClassSession } from '../../context/ClassSessionContext'
+import { sendIncidentReport } from '../../api/api'
 import { styles } from '../../styles/student/StudentIncidentForm.styles'
 
 const MOTIVES = ['Salud / Médico', 'Transporte', 'Fuerza Mayor']
 
 export default function StudentIncidentFormScreen({ navigation }) {
-  const { classInfo } = useClassSession()
+  const { classInfo, registerIncident } = useClassSession()
   const [selectedMotive, setSelectedMotive] = useState('Salud / Médico')
   const [description, setDescription] = useState(
     'Retraso justificado por contingencia en el traslado matutino hacia la institución.'
@@ -27,6 +28,7 @@ export default function StudentIncidentFormScreen({ navigation }) {
     name: 'justificativo_asistencia.pdf',
     size: '240 KB'
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const pickDocument = async () => {
     try {
@@ -46,16 +48,42 @@ export default function StudentIncidentFormScreen({ navigation }) {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!description.trim()) {
       Alert.alert('Justificación requerida', 'Debes ingresar una descripción de la causa del retraso.')
       return
     }
-    navigation.replace('StudentIncidentSuccess', {
-      folio: '#INC-2026-0842',
-      motive: selectedMotive,
-      fileName: attachedFile?.name
-    })
+    setIsSubmitting(true)
+    try {
+      const result = await sendIncidentReport({
+        studentName: 'Daniel Álvarez',
+        studentCi: '29.842.119',
+        subject: classInfo.subject,
+        statement: description,
+        pdfName: attachedFile?.name || 'justificativo_asistencia.pdf',
+        tagType: selectedMotive
+      })
+
+      const folio = result?.folio || `INC-2026-${Math.floor(1000 + Math.random() * 9000)}`
+      await registerIncident(
+        '29.842.119',
+        folio,
+        selectedMotive,
+        description,
+        attachedFile?.name || 'justificativo_asistencia.pdf'
+      )
+
+      navigation.replace('StudentIncidentSuccess', {
+        folio: folio.startsWith('#') ? folio : `#${folio}`,
+        motive: selectedMotive,
+        fileName: attachedFile?.name || 'justificativo_asistencia.pdf'
+      })
+    } catch (err) {
+      console.warn('Error al registrar incidencia:', err)
+      Alert.alert('Error', 'No se pudo enviar la justificación.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

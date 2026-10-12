@@ -108,6 +108,30 @@ export const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginLeft: 6
   },
+  tokenPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.full,
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
+  },
+  tokenPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#334155',
+    letterSpacing: 0.3
+  },
+  greenMiniDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+    marginRight: 6
+  },
   fullScreenBtn: {
     width: '100%',
     flexDirection: 'row',

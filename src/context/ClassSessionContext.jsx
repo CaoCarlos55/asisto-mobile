@@ -107,6 +107,22 @@ export function ClassSessionProvider({ children }) {
     }
   }
 
+  const [qrToken, setQrToken] = useState(() => Math.floor(100000 + Math.random() * 900000).toString())
+  const [qrSecondsRemaining, setQrSecondsRemaining] = useState(15)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setQrSecondsRemaining(prev => {
+        if (prev <= 1) {
+          setQrToken(Math.floor(100000 + Math.random() * 900000).toString())
+          return 15
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   const cancelClass = async (reason) => {
     setCancellationReason(reason)
     setSessionStatus('cancelled')
@@ -116,14 +132,47 @@ export function ClassSessionProvider({ children }) {
   }
 
   const markManualAttendance = async (studentId, cause) => {
+    let affectedStudent = null
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     const updated = students.map(s => {
       if (s.id === studentId) {
+        affectedStudent = s
         return {
           ...s,
           status: 'present_manual',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: timeStr,
           contingency: cause,
           auditTag: 'Registro Manual por el Profesor'
+        }
+      }
+      return s
+    })
+    setStudents(updated)
+    await persistOffline(updated)
+    if (affectedStudent) {
+      await sendAttendanceLog({
+        studentCi: affectedStudent.ci,
+        classroomId: 'aula-12',
+        subject: classInfo.subject,
+        status: 'presente',
+        geofenceVerified: true,
+        auditNote: `Manual: ${cause}`
+      })
+    }
+  }
+
+  const registerIncident = async (studentCi, folio, motive, description, fileName) => {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const updated = students.map(s => {
+      if (s.ci.includes(studentCi) || s.name.toLowerCase().includes('daniel álvarez')) {
+        return {
+          ...s,
+          status: 'in_review',
+          time: timeStr,
+          incidentFolio: folio,
+          incidentMotive: motive,
+          incidentDescription: description,
+          incidentFile: fileName
         }
       }
       return s
@@ -228,7 +277,10 @@ export function ClassSessionProvider({ children }) {
         saveLogbook,
         executeFinalClosure,
         registerStudentAttendance,
-        resetSession
+        resetSession,
+        registerIncident,
+        qrToken,
+        qrSecondsRemaining
       }}
     >
       {children}

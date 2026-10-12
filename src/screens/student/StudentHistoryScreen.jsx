@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   FlatList
 } from 'react-native'
 import { ChevronLeft } from 'lucide-react-native'
+import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentHistory.styles'
 
 const HISTORY_DATA = [
@@ -59,11 +60,42 @@ const HISTORY_DATA = [
 ]
 
 export default function StudentHistoryScreen({ navigation }) {
+  const { students, classInfo } = useClassSession()
   const [activeFilter, setActiveFilter] = useState('all')
 
+  const studentRecord = students?.find(
+    s => s.name.toLowerCase().includes('daniel álvarez') || s.ci.includes('29.842.119')
+  )
+
+  const dynamicHistory = useMemo(() => {
+    let list = [...HISTORY_DATA]
+    if (studentRecord && studentRecord.status !== 'pending') {
+      const isPresent = studentRecord.status === 'present_qr' || studentRecord.status === 'present_manual'
+      const isLate = studentRecord.status === 'late'
+      const isInReview = studentRecord.status === 'in_review'
+      const activeItem = {
+        id: 'h-active',
+        subject: classInfo.subject,
+        filterKey: 'mat',
+        sub: `${classInfo.section} • ${classInfo.classroom} • ${classInfo.teacher}`,
+        time: `Hoy ${studentRecord.time || '10:05 AM'} • ${
+          isPresent ? (studentRecord.status === 'present_manual' ? 'Marcado Manual por Docente' : 'Escaneo puntual en aula') :
+          isLate ? 'Registro con Retardo' :
+          isInReview ? `Justificación en revisión (${studentRecord.incidentFolio || '#INC-2026-0842'})` :
+          'Inasistencia'
+        }`,
+        note: isInReview ? `Motivo: ${studentRecord.incidentMotive || 'Salud / Médico'}` : undefined,
+        status: studentRecord.status,
+        statusText: isPresent ? 'Asistió (QR)' : isLate ? 'Retardo' : isInReview ? 'En revisión Coord.' : 'Inasistencia'
+      }
+      list = [activeItem, ...list.filter(item => item.id !== 'h1')]
+    }
+    return list
+  }, [studentRecord, classInfo])
+
   const filteredHistory = activeFilter === 'all'
-    ? HISTORY_DATA
-    : HISTORY_DATA.filter(item => item.filterKey === activeFilter)
+    ? dynamicHistory
+    : dynamicHistory.filter(item => item.filterKey === activeFilter)
 
   const renderItem = ({ item }) => {
     const isPresent = item.status === 'present_qr'
@@ -145,7 +177,7 @@ export default function StudentHistoryScreen({ navigation }) {
             onPress={() => setActiveFilter('all')}
           >
             <Text style={[styles.filterChipText, activeFilter === 'all' && styles.filterChipTextActive]}>
-              Todas (26)
+              Todas
             </Text>
           </TouchableOpacity>
 

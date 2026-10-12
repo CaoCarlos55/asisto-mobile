@@ -15,9 +15,10 @@ import { styles } from '../../styles/student/StudentScanner.styles'
 const { width } = Dimensions.get('window')
 
 export default function StudentScannerScreen({ navigation }) {
-  const { classInfo, registerStudentAttendance, sessionStatus } = useClassSession()
+  const { classInfo, registerStudentAttendance, sessionStatus, qrToken, qrSecondsRemaining } = useClassSession()
   const [torchOn, setTorchOn] = useState(false)
-  const [distanceMeters] = useState(6)
+  const [distanceMeters, setDistanceMeters] = useState(6)
+  const isWithinGeofence = distanceMeters <= 25
 
   const scannerSize = Math.min(width * 0.72, 230)
 
@@ -29,6 +30,15 @@ export default function StudentScannerScreen({ navigation }) {
       )
       return
     }
+
+    if (!isWithinGeofence) {
+      Alert.alert(
+        'Fuera de Geocerca (HU09)',
+        `Te encuentras a ${distanceMeters}m del aula (máximo permitido: 25m).\nDebes estar físicamente dentro del aula para registrar asistencia.`
+      )
+      return
+    }
+
     if (scenarioMinute <= 10) {
       registerStudentAttendance('29.842.119', 'present_qr', '10:05 AM')
       navigation.replace('StudentSuccessPresent')
@@ -59,7 +69,7 @@ export default function StudentScannerScreen({ navigation }) {
           <View style={styles.greenDot} />
           <View>
             <Text style={styles.geofenceBannerTitle}>GEOCERCA ACTIVA • AULA 12</Text>
-            <Text style={styles.geofenceBannerSub}>GPS: Alta precisión (±3m)</Text>
+            <Text style={styles.geofenceBannerSub}>GPS: Alta precisión (±3m) • {isWithinGeofence ? 'Dentro de aula' : 'Fuera de rango'}</Text>
           </View>
         </View>
 
@@ -100,28 +110,34 @@ export default function StudentScannerScreen({ navigation }) {
         <Text style={styles.scanSubject}>{classInfo.subject}</Text>
         <Text style={styles.scanTeacher}>Sección B • {classInfo.teacher}</Text>
         <Text style={styles.scanHint}>
-          Enfoca el código QR dinámico proyectado por el docente.{'\n'}
-          Se renueva cada 15 segundos
+          Token Dinámico: #{qrToken} • Renueva en {qrSecondsRemaining}s{'\n'}
+          Sincronizado con el reloj del servidor
         </Text>
 
         {/* Tarjeta de Geocerca Validada (HU09) */}
-        <View style={styles.geofenceCard}>
+        <TouchableOpacity
+          style={styles.geofenceCard}
+          onPress={() => setDistanceMeters(prev => prev === 6 ? 45 : 6)}
+          activeOpacity={0.8}
+        >
           <View style={styles.geofenceIconBox}>
-            <MapPin size={22} color="#10b981" />
+            <MapPin size={22} color={isWithinGeofence ? '#10b981' : '#ef4444'} />
           </View>
           <View style={styles.geofenceInfo}>
             <Text style={styles.geofenceCardTitle}>
-              Geocerca Validada (HU09)
+              {isWithinGeofence ? 'Geocerca Validada (HU09)' : 'Fuera de Rango GPS (HU09)'}
             </Text>
             <Text style={styles.geofenceCardSub}>Sede Principal • Aula 12</Text>
-            <Text style={styles.geofenceDistance}>
-              Distancia: {distanceMeters}m (Máximo: 25m)
+            <Text style={[styles.geofenceDistance, !isWithinGeofence && { color: '#f87171' }]}>
+              Distancia: {distanceMeters}m (Máx: 25m) • Toca para alternar
             </Text>
           </View>
-          <View style={styles.validBadge}>
-            <Text style={styles.validBadgeText}>VÁLIDO</Text>
+          <View style={isWithinGeofence ? styles.validBadge : styles.invalidBadge}>
+            <Text style={isWithinGeofence ? styles.validBadgeText : styles.invalidBadgeText}>
+              {isWithinGeofence ? 'DENTRO' : 'FUERA'}
+            </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Selector de Simulación de Escenarios IHC */}
         <View style={styles.simulationBar}>

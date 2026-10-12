@@ -51,7 +51,14 @@ export default function TeacherRosterScreen({ navigation }) {
             <Text style={styles.studentName}>{item.name}</Text>
             <Text style={styles.studentCi}>{item.ci}</Text>
             {isPresentManual && (
-              <Text style={styles.manualAuditSub}>Registro Manual por el Profesor</Text>
+              <Text style={styles.manualAuditSub}>
+                Registro Manual • {item.contingency || 'Auditoría Docente'}
+              </Text>
+            )}
+            {item.status === 'in_review' && (
+              <Text style={styles.manualAuditSub}>
+                Justificación ({item.incidentFolio || '#INC-2026-0842'})
+              </Text>
             )}
           </View>
         </View>
@@ -75,6 +82,20 @@ export default function TeacherRosterScreen({ navigation }) {
             <View style={styles.lateBadge}>
               <View style={styles.amberDot} />
               <Text style={styles.lateText}>Retardo ({item.time})</Text>
+            </View>
+          )}
+
+          {item.status === 'in_review' && (
+            <View style={styles.lateBadge}>
+              <View style={styles.amberDot} />
+              <Text style={styles.lateText}>En Revisión</Text>
+            </View>
+          )}
+
+          {item.status === 'absent' && (
+            <View style={[styles.lateBadge, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}>
+              <View style={[styles.amberDot, { backgroundColor: '#dc2626' }]} />
+              <Text style={[styles.lateText, { color: '#dc2626' }]}>Ausente</Text>
             </View>
           )}
 

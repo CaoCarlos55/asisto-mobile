@@ -15,7 +15,7 @@ import { styles } from '../../styles/teacher/TeacherQR.styles'
 const { width } = Dimensions.get('window')
 
 export default function TeacherQRScreen({ navigation }) {
-  const { classInfo, metrics } = useClassSession()
+  const { classInfo, metrics, qrToken, qrSecondsRemaining } = useClassSession()
   const [seconds, setSeconds] = useState(515) // 08:35
   const qrSize = Math.min(width * 0.62, 230)
 
@@ -47,17 +47,19 @@ export default function TeacherQRScreen({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.subjectTitle}>{classInfo.subject} • Sec. B</Text>
+        <Text style={styles.subjectTitle}>{classInfo.subject} • {classInfo.section}</Text>
         <Text style={styles.subjectSub}>
           {classInfo.classroom} • Bloque oficial {classInfo.timeBlock}
         </Text>
 
         {/* Tarjeta del Código QR */}
         <View style={styles.qrCard}>
-          {/* Contador de tiempo */}
+          {/* Contador de tiempo y rotación dinámica */}
           <View style={styles.timerPill}>
             <Clock size={14} color="#059669" />
-            <Text style={styles.timerText}>{formatTimer(seconds)} transcurridos</Text>
+            <Text style={styles.timerText}>
+              {formatTimer(seconds)} transcurridos • Renueva en {qrSecondsRemaining}s
+            </Text>
           </View>
 
           {/* Gráfico QR estilizado y nítido de alta precisión */}
@@ -65,11 +67,19 @@ export default function TeacherQRScreen({ navigation }) {
             <QRCodeView size={qrSize} color="#0f172a" />
           </View>
 
+          {/* Semilla de Token Dinámico (HU03) */}
+          <View style={styles.tokenPill}>
+            <View style={styles.greenMiniDot} />
+            <Text style={styles.tokenPillText}>
+              TOKEN ACTIVO: #{qrToken} • {qrSecondsRemaining}s
+            </Text>
+          </View>
+
           {/* Contador de registrados */}
           <View style={styles.registeredPill}>
             <Check size={14} color="#1d4ed8" />
             <Text style={styles.registeredPillText}>
-              {metrics.presents} alumnos registrados
+              {metrics.presents} alumnos registrados ({metrics.presentsManual} manual)
             </Text>
           </View>
 

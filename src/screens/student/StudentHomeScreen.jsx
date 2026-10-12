@@ -21,6 +21,7 @@ export default function StudentHomeScreen({ navigation }) {
   )
   const isPresent = studentRecord?.status === 'present_qr' || studentRecord?.status === 'present_manual'
   const isLate = studentRecord?.status === 'late'
+  const isInReview = studentRecord?.status === 'in_review'
   const isClosed = sessionStatus === 'closed' || sessionStatus === 'cancelled'
 
   return (
@@ -54,11 +55,11 @@ export default function StudentHomeScreen({ navigation }) {
           <View style={styles.classCardHeader}>
             <View style={styles.inCourseBadge}>
               <Text style={styles.inCourseText}>
-                {isClosed ? 'SESIÓN FINALIZADA' : 'CLASE EN CURSO AHORA'}
+                {isClosed ? 'SESIÓN FINALIZADA' : isInReview ? 'JUSTIFICACIÓN EN CURSO' : 'CLASE EN CURSO AHORA'}
               </Text>
             </View>
             <Text style={styles.minuteBadge}>
-              {isClosed ? 'Registro Cerrado' : 'Minuto 4 / 10'}
+              {isClosed ? 'Registro Cerrado' : isInReview ? 'En Revisión Coord.' : 'Minuto 4 / 10'}
             </Text>
           </View>
 
@@ -80,6 +81,13 @@ export default function StudentHomeScreen({ navigation }) {
               <AlertCircle size={15} color="#b45309" style={styles.alertIcon} />
               <Text style={styles.unregisteredAlertText}>
                 Asistencia registrada con Retardo (Min 14)
+              </Text>
+            </View>
+          ) : isInReview ? (
+            <View style={styles.registeredAlert}>
+              <AlertCircle size={15} color="#1d4ed8" style={styles.alertIcon} />
+              <Text style={styles.registeredAlertText}>
+                Justificación en revisión Coord. ({studentRecord?.incidentFolio || '#INC-2026-0842'})
               </Text>
             </View>
           ) : isClosed ? (
