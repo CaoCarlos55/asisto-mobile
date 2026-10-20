@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -7,9 +7,14 @@ import {
   Dimensions,
   Alert,
   Modal,
-  TextInput
+  TextInput,
+  Platform,
+  ActivityIndicator,
+  Linking,
+  StyleSheet
 } from 'react-native'
-import { ChevronLeft, Zap, ZapOff, MapPin, Keyboard, X } from 'lucide-react-native'
+import { CameraView, useCameraPermissions } from 'expo-camera'
+import { ChevronLeft, Zap, ZapOff, MapPin, Keyboard, X, Camera, Sliders } from 'lucide-react-native'
 import Svg, { Rect, Line } from 'react-native-svg'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentScanner.styles'
@@ -19,20 +24,125 @@ const { width } = Dimensions.get('window')
 export default function StudentScannerScreen({ navigation, route }) {
   const {
     classInfo,
+    students,
     registerStudentAttendance,
     sessionStatus,
     qrToken,
     qrSecondsRemaining,
+    remoteTeacherToken,
     validateQrToken
   } = useClassSession()
 
+  const [permission, requestPermission] = useCameraPermissions()
+  const [useRealCamera, setUseRealCamera] = useState(true)
+  const [isScanned, setIsScanned] = useState(false)
+  const isScannedRef = useRef(false)
   const [torchOn, setTorchOn] = useState(false)
   const [distanceMeters, setDistanceMeters] = useState(6)
   const [showManualModal, setShowManualModal] = useState(route?.params?.openManual || false)
   const [manualCode, setManualCode] = useState('')
+  const [cameraActive, setCameraActive] = useState(false)
+
+  const studentRecord = students?.find(
+    s => s.name?.toLowerCase().includes('daniel álvarez') || s.ci?.includes('29.842.119')
+  )
+  const isAlreadyRegistered =
+    studentRecord?.status === 'present_qr' ||
+    studentRecord?.status === 'present_manual' ||
+    studentRecord?.status === 'late'
 
   const isWithinGeofence = distanceMeters <= 25
-  const scannerSize = Math.min(width * 0.72, 230)
+  const scannerSize = Math.min(width * 0.82, 260)
+  const hasRequestedPerms = useRef(false)
+
+  // Solicitar permiso de cámara exactamente UNA SOLA VEZ al montar la pantalla
+  useEffect(() => {
+    if (!hasRequestedPerms.current) {
+      hasRequestedPerms.current = true
+      requestPermission().catch(() => {})
+    }
+  }, [])
+
+  const handleOpenManualModal = () => {
+    isScannedRef.current = true
+    setIsScanned(true)
+    setShowManualModal(true)
+  }
+
+  const handleCloseManualModal = () => {
+    setShowManualModal(false)
+    setTimeout(() => {
+      isScannedRef.current = false
+      setIsScanned(false)
+    }, 400)
+  }
+
+  // Manejo de lectura de código de barras / QR real mediante expo-camera
+  const handleBarcodeScanned = ({ data }) => {
+    if (isScannedRef.current || showManualModal) return
+    isScannedRef.current = true
+    setIsScanned(true)
+    console.log('[StudentScanner] Código QR capturado por la cámara:', data)
+
+    if (sessionStatus === 'closed' || sessionStatus === 'cancelled') {
+      Alert.alert(
+        'QR Inerte • Sesión Cerrada',
+        'El docente ya ejecutó el cierre definitivo de la sesión. El código QR ha quedado inerte y no acepta más asistencias.',
+        [{ text: 'Entendido', onPress: () => { isScannedRef.current = false; setIsScanned(false) } }]
+      )
+      return
+    }
+
+    if (isAlreadyRegistered) {
+      Alert.alert(
+        'Asistencia Ya Registrada',
+        `Tu asistencia ya fue registrada previamente para esta sesión (${studentRecord?.time || '10:05 AM'} • ${studentRecord?.status === 'late' ? 'Retardo' : 'Presente'}).\n\nSi deseas probar nuevamente el rechazo de un código viejo, primero pulsa "Reiniciar Estado del Alumno" en la pantalla de inicio.`,
+        [{ text: 'Entendido', onPress: () => navigation.goBack() }]
+      )
+      return
+    }
+
+    if (!isWithinGeofence) {
+      Alert.alert(
+        'Fuera de Geocerca (HU09)',
+        `Te encuentras a ${distanceMeters}m del aula (máximo permitido: 25m).\nDebes estar físicamente dentro del aula para registrar asistencia.`,
+        [{ text: 'Entendido', onPress: () => { isScannedRef.current = false; setIsScanned(false) } }]
+      )
+      return
+    }
+
+    // Validar estrictamente el token dinámico activo (el código QR anterior queda invalidado)
+    const isValid = validateQrToken(data)
+
+    if (!isValid) {
+      Alert.alert(
+        'Código QR No Válido o Expirado',
+        `El código escaneado no coincide con el token activo de la clase o ha expirado. Verifica el código proyectado por el profesor.`,
+        [{
+          text: 'Reintentar',
+          onPress: () => {
+            isScannedRef.current = false
+            setIsScanned(false)
+          }
+        }]
+      )
+      return
+    }
+
+    // Determinar ventana de tiempo oficial (HU06, HU07, HU08)
+    const elapsed = classInfo.elapsedMinutes || 5
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    if (elapsed <= 10) {
+      registerStudentAttendance('29.842.119', 'present_qr', timeStr)
+      navigation.replace('StudentSuccessPresent')
+    } else if (elapsed <= 20) {
+      registerStudentAttendance('29.842.119', 'late', timeStr)
+      navigation.replace('StudentSuccessLate')
+    } else {
+      navigation.replace('StudentIncidentForm')
+    }
+  }
 
   const handleSimulateScan = (scenarioMinute = 5) => {
     if (sessionStatus === 'closed' || sessionStatus === 'cancelled') {
@@ -67,6 +177,14 @@ export default function StudentScannerScreen({ navigation, route }) {
       Alert.alert(
         'QR Inerte • Sesión Cerrada',
         'El docente ya ejecutó el cierre definitivo de la sesión. El código ha quedado inerte y no acepta más asistencias.'
+      )
+      return
+    }
+
+    if (isAlreadyRegistered) {
+      Alert.alert(
+        'Asistencia Ya Registrada',
+        `Tu asistencia ya fue registrada previamente para esta sesión (${studentRecord?.time || '10:05 AM'}).\n\nSi deseas probar nuevamente el rechazo de códigos, primero pulsa "Reiniciar Estado del Alumno" en la pantalla de inicio.`
       )
       return
     }
@@ -114,6 +232,31 @@ export default function StudentScannerScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
+        {/* Selector de Modo: Cámara Real vs Simulador */}
+        <View style={styles.modeToggleRow}>
+          <TouchableOpacity
+            style={[styles.modeBtn, useRealCamera && styles.modeBtnActive]}
+            onPress={() => setUseRealCamera(true)}
+            activeOpacity={0.8}
+          >
+            <Camera size={13} color={useRealCamera ? '#ffffff' : '#94a3b8'} />
+            <Text style={[styles.modeBtnText, useRealCamera && styles.modeBtnTextActive]}>
+              Cámara Real
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.modeBtn, !useRealCamera && styles.modeBtnActive]}
+            onPress={() => setUseRealCamera(false)}
+            activeOpacity={0.8}
+          >
+            <Sliders size={13} color={!useRealCamera ? '#ffffff' : '#94a3b8'} />
+            <Text style={[styles.modeBtnText, !useRealCamera && styles.modeBtnTextActive]}>
+              Modo Simulador
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Banner de Geocerca Activa (HU09) */}
         <View style={styles.geofenceBanner}>
           <View style={styles.greenDot} />
@@ -123,36 +266,110 @@ export default function StudentScannerScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* Visor de Escaneo QR */}
+        {/* Visor de Escaneo QR (Cámara Real con marco HUD o Simulador) */}
         <View style={styles.scannerWrapper}>
           <View style={styles.scannerBox}>
-            <Svg width={scannerSize} height={scannerSize} viewBox="0 0 100 100">
-              <Line x1="4" y1="4" x2="25" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-              <Line x1="4" y1="4" x2="4" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+            {useRealCamera ? (
+              permission === null ? (
+                <View style={styles.permissionBox}>
+                  <ActivityIndicator size="large" color="#38bdf8" />
+                  <Text style={styles.permissionTitle}>Iniciando cámara...</Text>
+                  <Text style={styles.permissionText}>Comprobando permisos del dispositivo</Text>
+                </View>
+              ) : permission?.granted ? (
+                <>
+                  <CameraView
+                    style={styles.cameraView}
+                    facing="back"
+                    enableTorch={torchOn}
+                    barcodeScannerSettings={
+                      showManualModal ? undefined : { barcodeTypes: ['qr'] }
+                    }
+                    onCameraReady={() => setCameraActive(true)}
+                    onBarcodeScanned={(isScanned || showManualModal) ? undefined : handleBarcodeScanned}
+                    onMountError={(e) => {
+                      console.warn('Aviso al montar cámara en dispositivo:', e)
+                      Alert.alert(
+                        'Cámara no disponible',
+                        'No se pudo activar la vista previa de la cámara en este dispositivo. Puedes cambiar al Modo Simulador para continuar las pruebas.'
+                      )
+                      setUseRealCamera(false)
+                    }}
+                  />
+                  {/* Overlay HUD posicionado absolutamente sobre la cámara (sin ser hijo de CameraView) */}
+                  <View style={styles.cameraOverlay} pointerEvents="none">
+                    <Svg width={scannerSize} height={scannerSize} viewBox="0 0 100 100">
+                      <Line x1="4" y1="4" x2="25" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="4" y1="4" x2="4" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Line x1="96" y1="4" x2="75" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-              <Line x1="96" y1="4" x2="96" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="96" y1="4" x2="75" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="96" y1="4" x2="96" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Line x1="4" y1="96" x2="25" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-              <Line x1="4" y1="96" x2="4" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="4" y1="96" x2="25" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="4" y1="96" x2="4" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Line x1="96" y1="96" x2="75" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-              <Line x1="96" y1="96" x2="96" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="96" y1="96" x2="75" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                      <Line x1="96" y1="96" x2="96" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Rect x="20" y="20" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
-              <Rect x="24" y="24" width="14" height="14" rx="2" fill="#0a0f1d" />
-              <Rect x="27" y="27" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+                      <Line x1="10" y1="50" x2="90" y2="50" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3, 3" />
+                    </Svg>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.permissionBox}>
+                  <Camera size={34} color="#38bdf8" />
+                  <Text style={styles.permissionTitle}>Permiso de Cámara Requerido</Text>
+                  <Text style={styles.permissionText}>
+                    {permission?.canAskAgain
+                      ? 'Se requiere acceso a la cámara para escanear el código QR del aula.'
+                      : 'El acceso a la cámara está desactivado para Expo Go en tu teléfono.'}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.permissionBtn}
+                    onPress={() => {
+                      if (permission?.canAskAgain) {
+                        requestPermission()
+                      } else {
+                        Linking.openSettings()
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.permissionBtnText}>
+                      {permission?.canAskAgain ? 'Habilitar Cámara' : 'Abrir Ajustes del Teléfono'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            ) : (
+              <Svg width={scannerSize} height={scannerSize} viewBox="0 0 100 100">
+                <Line x1="4" y1="4" x2="25" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                <Line x1="4" y1="4" x2="4" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Rect x="58" y="20" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
-              <Rect x="62" y="24" width="14" height="14" rx="2" fill="#0a0f1d" />
-              <Rect x="65" y="27" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+                <Line x1="96" y1="4" x2="75" y2="4" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                <Line x1="96" y1="4" x2="96" y2="25" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Rect x="20" y="58" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
-              <Rect x="24" y="62" width="14" height="14" rx="2" fill="#0a0f1d" />
-              <Rect x="27" y="65" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+                <Line x1="4" y1="96" x2="25" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                <Line x1="4" y1="96" x2="4" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
 
-              <Line x1="8" y1="50" x2="92" y2="50" stroke="#38bdf8" strokeWidth="3" />
-            </Svg>
+                <Line x1="96" y1="96" x2="75" y2="96" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+                <Line x1="96" y1="96" x2="96" y2="75" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+
+                <Rect x="20" y="20" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
+                <Rect x="24" y="24" width="14" height="14" rx="2" fill="#0a0f1d" />
+                <Rect x="27" y="27" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+
+                <Rect x="58" y="20" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
+                <Rect x="62" y="24" width="14" height="14" rx="2" fill="#0a0f1d" />
+                <Rect x="65" y="27" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+
+                <Rect x="20" y="58" width="22" height="22" rx="3" fill="rgba(255,255,255,0.7)" />
+                <Rect x="24" y="62" width="14" height="14" rx="2" fill="#0a0f1d" />
+                <Rect x="27" y="65" width="8" height="8" rx="1" fill="rgba(255,255,255,0.7)" />
+
+                <Line x1="8" y1="50" x2="92" y2="50" stroke="#38bdf8" strokeWidth="3" />
+              </Svg>
+            )}
           </View>
         </View>
 
@@ -192,7 +409,7 @@ export default function StudentScannerScreen({ navigation, route }) {
         {/* Botón de Contingencia: Ingreso Manual de Código */}
         <TouchableOpacity
           style={styles.manualEntryBtn}
-          onPress={() => setShowManualModal(true)}
+          onPress={handleOpenManualModal}
           activeOpacity={0.85}
         >
           <Keyboard size={18} color="#38bdf8" style={styles.btnIcon} />
@@ -239,7 +456,7 @@ export default function StudentScannerScreen({ navigation, route }) {
           visible={showManualModal}
           transparent
           animationType="fade"
-          onRequestClose={() => setShowManualModal(false)}
+          onRequestClose={handleCloseManualModal}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
@@ -250,7 +467,7 @@ export default function StudentScannerScreen({ navigation, route }) {
                 </View>
                 <TouchableOpacity
                   style={styles.modalCloseBtn}
-                  onPress={() => setShowManualModal(false)}
+                  onPress={handleCloseManualModal}
                 >
                   <X size={20} color="#94a3b8" />
                 </TouchableOpacity>
@@ -280,13 +497,13 @@ export default function StudentScannerScreen({ navigation, route }) {
 
               <View style={styles.modalTokenHint}>
                 <Text style={styles.modalTokenHintText}>
-                  Token proyectado en aula: #{qrToken} • {qrSecondsRemaining}s
+                  Token proyectado en aula: #{remoteTeacherToken || qrToken} • {qrSecondsRemaining}s
                 </Text>
               </View>
 
               <TouchableOpacity
                 style={styles.modalQuickFillBtn}
-                onPress={() => setManualCode(qrToken)}
+                onPress={() => setManualCode(remoteTeacherToken || qrToken)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.modalQuickFillText}>
@@ -304,7 +521,7 @@ export default function StudentScannerScreen({ navigation, route }) {
 
               <TouchableOpacity
                 style={styles.modalCancelBtn}
-                onPress={() => setShowManualModal(false)}
+                onPress={handleCloseManualModal}
                 activeOpacity={0.8}
               >
                 <Text style={styles.modalCancelBtnText}>Cancelar</Text>

@@ -4,6 +4,16 @@ import { supabase } from './supabaseClient'
  * Operaciones API móviles para sincronización con Supabase (HU01 - HU10)
  */
 
+// Normalizar ID del aula para coincidir con el ID registrado en la BD de Supabase (ej. '204' para Prof. Roberto García)
+export function normalizeClassroomId(id) {
+  if (!id) return '204'
+  const clean = String(id).trim()
+  if (clean.toLowerCase() === 'aula-12' || clean.toLowerCase() === 'aula 12' || clean === '12') {
+    return '204'
+  }
+  return clean
+}
+
 // 1. Registrar Asistencia de Estudiante (HU06, HU07, HU08)
 export async function sendAttendanceLog({
   studentCi,
@@ -14,15 +24,30 @@ export async function sendAttendanceLog({
   auditNote = null
 }) {
   if (!supabase) return null
+  const roomId = normalizeClassroomId(classroomId)
   try {
-    const { data, error } = await supabase.from('attendance_logs').insert({
+    let { data, error } = await supabase.from('attendance_logs').insert({
       student_ci: studentCi,
-      classroom_id: classroomId || 'aula-12',
+      classroom_id: roomId,
       subject: subject || 'Matemáticas',
       status: status, // 'presente' | 'retardo' | 'ausente' | 'justificado'
       geofence_verified: geofenceVerified,
       scan_timestamp: new Date().toISOString()
     }).select()
+
+    // Si falló por restricción de clave foránea de aula, reintentar con null para no perder el log de asistencia
+    if (error && (error.code === '23503' || error.message?.includes('foreign key'))) {
+      const retry = await supabase.from('attendance_logs').insert({
+        student_ci: studentCi,
+        classroom_id: null,
+        subject: subject || 'Matemáticas',
+        status: status,
+        geofence_verified: geofenceVerified,
+        scan_timestamp: new Date().toISOString()
+      }).select()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) console.warn('Aviso al registrar asistencia en Supabase:', error.message)
     return data
@@ -77,13 +102,14 @@ export async function sendIncidentReport({
 // 3. Cancelar Sesión de Clase (HU02)
 export async function cancelClassroomSession(classroomId, reason) {
   if (!supabase) return
+  const id = normalizeClassroomId(classroomId)
   const { error } = await supabase.from('classrooms').update({
     status: 'danger',
     status_label: 'Cancelada',
     badge_color: 'red',
     note: `Cancelada: ${reason}`,
     has_action: false
-  }).eq('id', classroomId || 'aula-12')
+  }).eq('id', id)
 
   if (error) console.warn('Error al cancelar clase en Supabase:', error.message)
 }
@@ -91,18 +117,19 @@ export async function cancelClassroomSession(classroomId, reason) {
 // 4. Cerrar Registro de Asistencia (HU05)
 export async function closeClassroomSession(classroomId) {
   if (!supabase) return
+  const id = normalizeClassroomId(classroomId)
   const { error } = await supabase.from('classrooms').update({
     status: 'normal',
     status_label: 'Registro Cerrado',
     delay_minutes: 0,
     note: 'Cierre completado por docente',
     has_action: false
-  }).eq('id', classroomId || 'aula-12')
+  }).eq('id', id)
 
   if (error) console.warn('Error al cerrar clase en Supabase:', error.message)
 
   // Resolver alertas docentes activas en coordinación
   await supabase.from('teacher_alerts').update({
     status: 'resolved'
-  }).eq('classroom_id', classroomId || 'aula-12')
+  }).eq('classroom_id', id)
 }

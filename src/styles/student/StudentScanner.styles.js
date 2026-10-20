@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native'
+import { StyleSheet, Dimensions, Platform } from 'react-native'
 import { theme } from '../theme'
 
 const { width } = Dimensions.get('window')
@@ -57,16 +57,97 @@ export const styles = StyleSheet.create({
     color: '#a7f3d0'
   },
   scannerWrapper: {
+    width: '100%',
     marginVertical: 10,
     alignItems: 'center',
     justifyContent: 'center'
   },
   scannerBox: {
-    width: Math.min(width * 0.72, 240),
-    height: Math.min(width * 0.72, 240),
+    width: Math.min(width * 0.86, 280),
+    height: Math.min(width * 0.86, 280),
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative'
+    position: 'relative',
+    overflow: Platform.OS === 'ios' ? 'hidden' : 'visible',
+    borderRadius: Platform.OS === 'ios' ? 20 : 0,
+    backgroundColor: '#000000',
+    borderWidth: 2,
+    borderColor: '#38bdf8'
+  },
+  cameraView: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: Platform.OS === 'ios' ? 18 : 0
+  },
+  cameraOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent'
+  },
+  permissionBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16
+  },
+  permissionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginTop: 8,
+    textAlign: 'center'
+  },
+  permissionText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+    lineHeight: 16
+  },
+  permissionBtn: {
+    backgroundColor: '#0284c7',
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 8
+  },
+  permissionBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff'
+  },
+  modeToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#131b2e',
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#1e293b'
+  },
+  modeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 7,
+    gap: 5
+  },
+  modeBtnActive: {
+    backgroundColor: '#0284c7'
+  },
+  modeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8'
+  },
+  modeBtnTextActive: {
+    color: '#ffffff'
   },
   scanSubject: {
     fontSize: 17,

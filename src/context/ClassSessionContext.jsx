@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../api/supabaseClient'
 import { cancelClassroomSession, closeClassroomSession, sendAttendanceLog } from '../api/api'
+import { useAuth } from './AuthContext'
 
 const ClassSessionContext = createContext(null)
 
@@ -40,7 +41,27 @@ const INITIAL_STUDENTS = [
   { id: '32', name: 'Gustavo Leal', ci: 'C.I. 28.109.876', status: 'pending', initials: 'GL' }
 ]
 
+// Generador determinista de Token Dinámico tipo TOTP sincronizado por bloques de tiempo (15 segundos)
+// Permite que la computadora (Profesor) y el teléfono móvil (Estudiante) generen exactamente el mismo token
+export function getDynamicQrToken(timestamp = Date.now()) {
+  const slot = Math.floor(timestamp / 15000)
+  let hash = slot
+  hash = ((hash >> 16) ^ hash) * 0x45d9f3b
+  hash = ((hash >> 16) ^ hash) * 0x45d9f3b
+  hash = (hash >> 16) ^ hash
+  const token = Math.abs(hash % 900000) + 100000
+  return token.toString()
+}
+
+export function getQrSecondsRemaining() {
+  const remaining = 15 - (Math.floor(Date.now() / 1000) % 15)
+  return remaining === 0 ? 15 : remaining
+}
+
 export function ClassSessionProvider({ children }) {
+  const auth = useAuth()
+  const isTeacher = auth?.userRole === 'teacher'
+
   const [sessionStatus, setSessionStatus] = useState('active')
 
   const [classInfo, setClassInfo] = useState({
@@ -216,27 +237,141 @@ export function ClassSessionProvider({ children }) {
     }
   }
 
-  const [qrToken, setQrToken] = useState(() => Math.floor(100000 + Math.random() * 900000).toString())
-  const [previousQrToken, setPreviousQrToken] = useState(null)
-  const [qrSecondsRemaining, setQrSecondsRemaining] = useState(15)
+  const [qrToken, setQrToken] = useState(() => getDynamicQrToken())
+  const [previousQrToken, setPreviousQrToken] = useState(() => getDynamicQrToken(Date.now() - 15000))
+  const [qrTimestamp, setQrTimestamp] = useState(() => Date.now())
+  const [qrSecondsRemaining, setQrSecondsRemaining] = useState(() => getQrSecondsRemaining())
 
+  // Sincronización multi-dispositivo y compensación de desfase de reloj (PC Docente <-> Móvil Estudiante)
+  const [remoteTeacherToken, setRemoteTeacherToken] = useState(null)
+  const [remoteTeacherPreviousToken, setRemoteTeacherPreviousToken] = useState(null)
+  const [remoteTeacherTimestamp, setRemoteTeacherTimestamp] = useState(null)
+  const [clockOffset, setClockOffset] = useState(0)
+  const lastKnownTeacherTsRef = useRef(Date.now())
+
+  // Publicar token activo en Supabase para que cualquier dispositivo móvil lo reciba en tiempo real (solo rol docente)
+  const publishTeacherToken = async (token, ts) => {
+    if (!supabase || !isTeacher) return
+    try {
+      await supabase
+        .from('classrooms')
+        .update({ sub_note: `QR:${token}:${ts}` })
+        .eq('id', '204')
+    } catch (e) {
+      // Fallback offline
+    }
+  }
+
+  // Sincronizar el token dinámico y la cuenta regresiva con el reloj TOTP
   useEffect(() => {
+    if (isTeacher) {
+      publishTeacherToken(qrToken, qrTimestamp)
+    }
+
     const timer = setInterval(() => {
-      setQrSecondsRemaining(prev => {
-        if (prev <= 1) {
-          setPreviousQrToken(qrToken)
-          setQrToken(Math.floor(100000 + Math.random() * 900000).toString())
-          return 15
+      const remaining = getQrSecondsRemaining()
+      setQrSecondsRemaining(remaining)
+      if (remaining === 15) {
+        const now = Date.now()
+        const nextToken = getDynamicQrToken(now)
+        const prev = qrToken
+        setPreviousQrToken(prev)
+        setQrToken(nextToken)
+        setQrTimestamp(now)
+        if (isTeacher) {
+          publishTeacherToken(nextToken, now)
         }
-        return prev - 1
-      })
+      }
     }, 1000)
     return () => clearInterval(timer)
-  }, [qrToken])
+  }, [qrToken, qrTimestamp, isTeacher])
+
+  // Escuchar en tiempo real el token proyectado por el docente en Supabase (HU03/HU07)
+  useEffect(() => {
+    if (!supabase) return
+
+    const fetchClassroomToken = async () => {
+      try {
+        const { data } = await supabase
+          .from('classrooms')
+          .select('sub_note')
+          .eq('id', '204')
+          .single()
+        if (data?.sub_note?.startsWith('QR:')) {
+          const [, token, ts] = data.sub_note.split(':')
+          if (token) {
+            setRemoteTeacherToken(token)
+            if (ts) {
+              const numTs = Number(ts)
+              setRemoteTeacherTimestamp(numTs)
+              setClockOffset(numTs - Date.now())
+              lastKnownTeacherTsRef.current = Math.max(lastKnownTeacherTsRef.current, numTs)
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback offline
+      }
+    }
+
+    fetchClassroomToken()
+    const polling = setInterval(fetchClassroomToken, 4000)
+
+    const channel = supabase
+      .channel('mobile_classroom_token_listener')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'classrooms' },
+        (payload) => {
+          if (payload.new?.sub_note?.startsWith('QR:')) {
+            const [, token, ts] = payload.new.sub_note.split(':')
+            if (token) {
+              setRemoteTeacherToken(prev => {
+                if (prev && prev !== token) setRemoteTeacherPreviousToken(prev)
+                return token
+              })
+              if (ts) {
+                const numTs = Number(ts)
+                setRemoteTeacherTimestamp(numTs)
+                setClockOffset(numTs - Date.now())
+                lastKnownTeacherTsRef.current = Math.max(lastKnownTeacherTsRef.current, numTs)
+              }
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(polling)
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
 
   const validateQrToken = (entered) => {
-    const clean = (entered || '').toString().trim().replace(/[^0-9]/g, '')
-    return clean === qrToken || (previousQrToken && clean === previousQrToken)
+    if (!entered) return false
+    const str = entered.toString().trim()
+    console.log('[QR Validation] Código recibido:', str)
+
+    // Extraer el token numérico del payload del QR
+    let candidate = str
+    if (str.includes(':')) {
+      const parts = str.split(':')
+      // Formato: ASISTO:aula:TOKEN:timestamp
+      candidate = parts.length >= 3 ? parts[2] : parts[parts.length - 1]
+    }
+    const clean = candidate.replace(/[^0-9]/g, '')
+    if (!clean || clean.length < 6) return false
+
+    // Validación estricta: SOLO el slot TOTP activo de 15 segundos
+    const currentToken = getDynamicQrToken()
+    if (clean === currentToken) {
+      console.log('[QR Validation] Token válido (slot activo):', currentToken)
+      return true
+    }
+
+    console.warn('[QR Validation] Token rechazado:', clean, '— Token activo:', currentToken)
+    return false
   }
 
   const cancelClass = async (reason) => {
@@ -244,7 +379,7 @@ export function ClassSessionProvider({ children }) {
     setSessionStatus('cancelled')
     setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
     await persistOffline(students, 'cancelled', logbook)
-    await cancelClassroomSession('aula-12', reason)
+    await cancelClassroomSession(classInfo.classroom || '204', reason)
   }
 
   const markManualAttendance = async (studentId, cause) => {
@@ -268,7 +403,7 @@ export function ClassSessionProvider({ children }) {
     if (affectedStudent) {
       await sendAttendanceLog({
         studentCi: affectedStudent.ci,
-        classroomId: 'aula-12',
+        classroomId: classInfo.classroom || '204',
         subject: classInfo.subject,
         status: 'presente',
         geofenceVerified: true,
@@ -315,7 +450,7 @@ export function ClassSessionProvider({ children }) {
     })
     setStudents(finalised)
     await persistOffline(finalised, 'closed')
-    await closeClassroomSession('aula-12')
+    await closeClassroomSession(classInfo.classroom || '204')
   }
 
   const registerStudentAttendance = async (studentCi, status, time, observations = null) => {
@@ -335,7 +470,7 @@ export function ClassSessionProvider({ children }) {
     await persistOffline(updated)
     await sendAttendanceLog({
       studentCi,
-      classroomId: 'aula-12',
+      classroomId: classInfo.classroom || '204',
       subject: classInfo.subject,
       status: (status === 'present_qr' || status === 'present_manual') ? 'presente' : status === 'late' ? 'retardo' : 'ausente'
     })
@@ -408,7 +543,11 @@ export function ClassSessionProvider({ children }) {
         registerIncident,
         qrToken,
         previousQrToken,
+        qrTimestamp,
         qrSecondsRemaining,
+        remoteTeacherToken,
+        remoteTeacherPreviousToken,
+        remoteTeacherTimestamp,
         validateQrToken
       }}
     >

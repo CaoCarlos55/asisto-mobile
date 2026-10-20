@@ -18,7 +18,7 @@ import { styles } from '../../styles/teacher/TeacherQR.styles'
 const { width } = Dimensions.get('window')
 
 export default function TeacherQRScreen({ navigation }) {
-  const { classInfo, metrics, qrToken, qrSecondsRemaining } = useClassSession()
+  const { classInfo, metrics, qrToken, qrTimestamp, qrSecondsRemaining } = useClassSession()
   const [seconds, setSeconds] = useState(515) // 08:35
   const [isFullscreen, setIsFullscreen] = useState(false)
   const qrSize = Math.min(width * 0.62, 230)
@@ -86,7 +86,7 @@ export default function TeacherQRScreen({ navigation }) {
           {/* Gráfico QR dinámico que rota con el token activo */}
           <View style={styles.qrContainer}>
             <QRCodeView
-              value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}`}
+              value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}:${qrTimestamp || Date.now()}`}
               size={qrSize}
               color="#0f172a"
             />
@@ -177,7 +177,7 @@ export default function TeacherQRScreen({ navigation }) {
 
             <View style={styles.fullscreenQrBox}>
               <QRCodeView
-                value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}`}
+                value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}:${qrTimestamp || Date.now()}`}
                 size={fullscreenQrSize}
                 color="#0b1528"
               />
