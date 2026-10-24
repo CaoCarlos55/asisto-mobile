@@ -26,7 +26,8 @@
         {
           "cameraPermission": "Permite a Asisto acceder a tu cámara para escanear el código QR de asistencia."
         }
-      ]
+      ],
+      "expo-status-bar"
     ]
   }
 }

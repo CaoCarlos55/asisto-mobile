@@ -96,7 +96,7 @@ Descentraliza y agiliza el control de asistencia delegando el registro inicial a
 ## 🛠️ Tecnologías Utilizadas
 
 * **Framework Base:** [React Native](https://reactnative.dev/) `0.86.3`
-* **Plataforma / Tooling:** [Expo SDK 57](https://expo.dev/)
+* **Plataforma / Tooling:** [Expo SDK 58](https://expo.dev/)
 * **Navegación:** [React Navigation](https://reactnavigation.org/) (`@react-navigation/native-stack` v7)
 * **Soporte Web:** [React Native Web](https://necolas.github.io/react-native-web/) `v0.21.2` (ejecución sin emulador en cualquier navegador)
 * **Backend & Base de Datos:** [Supabase](https://supabase.com/) (`@supabase/supabase-js` v2)

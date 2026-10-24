@@ -16,12 +16,14 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { ChevronLeft, Zap, ZapOff, MapPin, Keyboard, X, Camera, Sliders } from 'lucide-react-native'
 import Svg, { Rect, Line } from 'react-native-svg'
+import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { styles } from '../../styles/student/StudentScanner.styles'
 
 const { width } = Dimensions.get('window')
 
 export default function StudentScannerScreen({ navigation, route }) {
+  const { currentUser } = useAuth()
   const {
     classInfo,
     students,
@@ -32,6 +34,8 @@ export default function StudentScannerScreen({ navigation, route }) {
     remoteTeacherToken,
     validateQrToken
   } = useClassSession()
+
+  const activeCi = currentUser?.ci || 'V-28.452.190'
 
   const [permission, requestPermission] = useCameraPermissions()
   const [useRealCamera, setUseRealCamera] = useState(true)
@@ -44,8 +48,9 @@ export default function StudentScannerScreen({ navigation, route }) {
   const [cameraActive, setCameraActive] = useState(false)
 
   const studentRecord = students?.find(
-    s => s.name?.toLowerCase().includes('daniel álvarez') || s.ci?.includes('29.842.119')
-  )
+    s => (currentUser?.ci && s.ci?.includes(currentUser.ci.replace(/[^0-9]/g, ''))) ||
+         (currentUser?.name && s.name?.toLowerCase().includes(currentUser.name.toLowerCase()))
+  ) || students?.[0]
   const isAlreadyRegistered =
     studentRecord?.status === 'present_qr' ||
     studentRecord?.status === 'present_manual' ||
@@ -134,10 +139,10 @@ export default function StudentScannerScreen({ navigation, route }) {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
     if (elapsed <= 10) {
-      registerStudentAttendance('29.842.119', 'present_qr', timeStr)
+      registerStudentAttendance(activeCi, 'present_qr', timeStr)
       navigation.replace('StudentSuccessPresent')
     } else if (elapsed <= 20) {
-      registerStudentAttendance('29.842.119', 'late', timeStr)
+      registerStudentAttendance(activeCi, 'late', timeStr)
       navigation.replace('StudentSuccessLate')
     } else {
       navigation.replace('StudentIncidentForm')
@@ -162,10 +167,10 @@ export default function StudentScannerScreen({ navigation, route }) {
     }
 
     if (scenarioMinute <= 10) {
-      registerStudentAttendance('29.842.119', 'present_qr', '10:05 AM')
+      registerStudentAttendance(activeCi, 'present_qr', '10:05 AM')
       navigation.replace('StudentSuccessPresent')
     } else if (scenarioMinute <= 20) {
-      registerStudentAttendance('29.842.119', 'late', '10:14 AM')
+      registerStudentAttendance(activeCi, 'late', '10:14 AM')
       navigation.replace('StudentSuccessLate')
     } else {
       navigation.replace('StudentIncidentForm')
@@ -208,10 +213,10 @@ export default function StudentScannerScreen({ navigation, route }) {
     setShowManualModal(false)
 
     if (scenarioMinute <= 10) {
-      registerStudentAttendance('29.842.119', 'present_manual', '10:05 AM', 'Falla en cámara móvil')
+      registerStudentAttendance(activeCi, 'present_manual', '10:05 AM', 'Falla en cámara móvil')
       navigation.replace('StudentSuccessPresent')
     } else if (scenarioMinute <= 20) {
-      registerStudentAttendance('29.842.119', 'late', '10:14 AM', 'Falla en cámara móvil')
+      registerStudentAttendance(activeCi, 'late', '10:14 AM', 'Falla en cámara móvil')
       navigation.replace('StudentSuccessLate')
     } else {
       navigation.replace('StudentIncidentForm')

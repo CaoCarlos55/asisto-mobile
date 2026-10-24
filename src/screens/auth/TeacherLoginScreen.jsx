@@ -19,8 +19,8 @@ export default function TeacherLoginScreen({ navigation }) {
   const [password, setPassword] = useState('••••••••••••')
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleLogin = () => {
-    loginAsTeacher(email)
+  const handleLogin = async () => {
+    await loginAsTeacher(email, password)
   }
 
   return (

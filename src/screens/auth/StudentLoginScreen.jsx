@@ -19,8 +19,8 @@ export default function StudentLoginScreen({ navigation }) {
   const [password, setPassword] = useState('••••••••••••')
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleLogin = () => {
-    loginAsStudent(email)
+  const handleLogin = async () => {
+    await loginAsStudent(email, password)
   }
 
   return (

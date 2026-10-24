@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../api/supabaseClient'
 import { cancelClassroomSession, closeClassroomSession, sendAttendanceLog } from '../api/api'
@@ -6,43 +6,18 @@ import { useAuth } from './AuthContext'
 
 const ClassSessionContext = createContext(null)
 
-const INITIAL_STUDENTS = [
-  { id: '1', name: 'Alejandro Rojas', ci: 'C.I. 28.451.902', status: 'present_qr', time: '10:02 AM', initials: 'AR' },
-  { id: '2', name: 'Mariana Castro', ci: 'C.I. 29.114.839', status: 'present_manual', time: '10:05 AM', contingency: 'Falla en cámara móvil', initials: 'MC' },
-  { id: '3', name: 'Daniel Vargas', ci: 'C.I. 27.882.104', status: 'late', time: '10:14 AM', initials: 'DV' },
-  { id: '4', name: 'Sofía Linares Mendoza', ci: 'C.I. 30.012.441', status: 'pending', initials: 'SL' },
-  { id: '5', name: 'Carlos Mendoza', ci: 'C.I. 28.903.112', status: 'pending', initials: 'CM' },
-  { id: '6', name: 'Daniel Álvarez', ci: 'C.I. 29.842.119', status: 'pending', initials: 'DA' },
-  { id: '7', name: 'Gabriela Blanco', ci: 'C.I. 28.710.450', status: 'present_qr', time: '10:03 AM', initials: 'GB' },
-  { id: '8', name: 'Ricardo Morales', ci: 'C.I. 29.332.109', status: 'present_qr', time: '10:04 AM', initials: 'RM' },
-  { id: '9', name: 'Valentina Peña', ci: 'C.I. 28.990.221', status: 'late', time: '10:16 AM', initials: 'VP' },
-  { id: '10', name: 'Andrés Gil', ci: 'C.I. 29.001.345', status: 'pending', initials: 'AG' },
-  { id: '11', name: 'Lucía Fernández', ci: 'C.I. 28.665.432', status: 'present_qr', time: '10:01 AM', initials: 'LF' },
-  { id: '12', name: 'José Martínez', ci: 'C.I. 27.912.834', status: 'present_qr', time: '10:04 AM', initials: 'JM' },
-  { id: '13', name: 'Elena Castillo', ci: 'C.I. 29.102.394', status: 'pending', initials: 'EC' },
-  { id: '14', name: 'Mauricio Rivas', ci: 'C.I. 28.321.456', status: 'pending', initials: 'MR' },
-  { id: '15', name: 'Camila Salazar', ci: 'C.I. 30.123.890', status: 'present_qr', time: '10:02 AM', initials: 'CS' },
-  { id: '16', name: 'Fernando Gómez', ci: 'C.I. 28.543.210', status: 'present_qr', time: '10:06 AM', initials: 'FG' },
-  { id: '17', name: 'Paola Herrera', ci: 'C.I. 29.654.321', status: 'pending', initials: 'PH' },
-  { id: '18', name: 'Javier Navarro', ci: 'C.I. 28.765.432', status: 'present_qr', time: '10:01 AM', initials: 'JN' },
-  { id: '19', name: 'Isabella Rondón', ci: 'C.I. 29.876.543', status: 'present_qr', time: '10:05 AM', initials: 'IR' },
-  { id: '20', name: 'Diego Paredes', ci: 'C.I. 28.987.654', status: 'pending', initials: 'DP' },
-  { id: '21', name: 'Valeria Lugo', ci: 'C.I. 29.098.765', status: 'present_qr', time: '10:03 AM', initials: 'VL' },
-  { id: '22', name: 'Sebastián Cruz', ci: 'C.I. 28.109.876', status: 'present_qr', time: '10:04 AM', initials: 'SC' },
-  { id: '23', name: 'Natalia Medina', ci: 'C.I. 29.210.987', status: 'pending', initials: 'NM' },
-  { id: '24', name: 'Rodrigo Flores', ci: 'C.I. 28.321.098', status: 'present_qr', time: '10:02 AM', initials: 'RF' },
-  { id: '25', name: 'Carla Barrios', ci: 'C.I. 29.432.109', status: 'present_qr', time: '10:07 AM', initials: 'CB' },
-  { id: '26', name: 'Manuel Ortiz', ci: 'C.I. 28.543.210', status: 'pending', initials: 'MO' },
-  { id: '27', name: 'Beatriz Silva', ci: 'C.I. 29.654.321', status: 'present_qr', time: '10:06 AM', initials: 'BS' },
-  { id: '28', name: 'Víctor Cordero', ci: 'C.I. 28.765.432', status: 'present_qr', time: '10:01 AM', initials: 'VC' },
-  { id: '29', name: 'Daniela Pineda', ci: 'C.I. 29.876.543', status: 'pending', initials: 'DP' },
-  { id: '30', name: 'Héctor Quintero', ci: 'C.I. 28.987.654', status: 'present_qr', time: '10:05 AM', initials: 'HQ' },
-  { id: '31', name: 'Adriana Márquez', ci: 'C.I. 29.098.765', status: 'present_qr', time: '10:02 AM', initials: 'AM' },
-  { id: '32', name: 'Gustavo Leal', ci: 'C.I. 28.109.876', status: 'pending', initials: 'GL' }
+export const DEFAULT_INITIAL_STUDENTS = [
+  { id: 's1', name: 'Daniel Álvarez', ci: 'V-28.452.190', status: 'pending', initials: 'DA' },
+  { id: 's2', name: 'Sofía Mendoza', ci: 'V-28.112.403', status: 'pending', initials: 'SM' },
+  { id: 's3', name: 'Carlos Gómez', ci: 'V-27.994.120', status: 'pending', initials: 'CG' },
+  { id: 's4', name: 'Mariana López', ci: 'V-28.601.215', status: 'pending', initials: 'ML' },
+  { id: 's5', name: 'Andrés Pérez', ci: 'V-29.410.882', status: 'pending', initials: 'AP' },
+  { id: 's6', name: 'Alejandro Rojas', ci: 'V-28.451.902', status: 'pending', initials: 'AR' },
+  { id: 's7', name: 'Mariana Castro', ci: 'V-29.114.839', status: 'pending', initials: 'MC' },
+  { id: 's8', name: 'Daniel Vargas', ci: 'V-27.882.104', status: 'pending', initials: 'DV' }
 ]
 
 // Generador determinista de Token Dinámico tipo TOTP sincronizado por bloques de tiempo (15 segundos)
-// Permite que la computadora (Profesor) y el teléfono móvil (Estudiante) generen exactamente el mismo token
 export function getDynamicQrToken(timestamp = Date.now()) {
   const slot = Math.floor(timestamp / 15000)
   let hash = slot
@@ -60,14 +35,16 @@ export function getQrSecondsRemaining() {
 
 export function ClassSessionProvider({ children }) {
   const auth = useAuth()
+  const currentUser = auth?.currentUser
   const isTeacher = auth?.userRole === 'teacher'
 
   const [sessionStatus, setSessionStatus] = useState('active')
 
   const [classInfo, setClassInfo] = useState({
-    subject: 'Matemáticas',
-    section: '4to Año • Sección B',
-    classroom: 'Aula 12',
+    subject: 'Matemática',
+    section: '5to Año • Sección B',
+    classroom: 'Aula 204',
+    classroomId: '204',
     timeBlock: '07:30 - 09:00 AM',
     teacher: 'Prof. Roberto García',
     qrStatus: 'Activo',
@@ -75,10 +52,10 @@ export function ClassSessionProvider({ children }) {
     isLive: true
   })
 
-  const [students, setStudents] = useState(INITIAL_STUDENTS)
+  const [students, setStudents] = useState(DEFAULT_INITIAL_STUDENTS)
 
   const [logbook, setLogbook] = useState({
-    subject: 'Matemáticas',
+    subject: 'Matemática',
     topic: 'Tema programático del día\nDesarrollo de contenidos y actividades prácticas',
     incidentType: 'Clase sin novedades',
     observations: 'Desarrollo normal de la sesión pedagógica según la planificación curricular. Participación activa de los estudiantes en las actividades propuestas.'
@@ -88,6 +65,127 @@ export function ClassSessionProvider({ children }) {
   const [lastIncidentReset, setLastIncidentReset] = useState(null)
   const lastIncidentResetRef = useRef(null)
 
+  // Cargar información dinámica de la clase cuando el usuario autenticado cambia
+  useEffect(() => {
+    if (!currentUser) return
+
+    const roomNum = currentUser.classroomId || '204'
+    const roomDisplayName = roomNum.startsWith('Aula') ? roomNum : `Aula ${roomNum}`
+    const subjectName = currentUser.subject || 'Matemática'
+    const sectionName = `${currentUser.yearLevel || '5to Año'} • ${currentUser.section || 'Sección B'}`
+    const teacherName = isTeacher ? (currentUser.name || 'Prof. Roberto García') : 'Prof. Roberto García'
+
+    setClassInfo(prev => ({
+      ...prev,
+      subject: subjectName,
+      section: sectionName,
+      classroom: roomDisplayName,
+      classroomId: roomNum,
+      teacher: teacherName,
+      timeBlock: '07:30 - 09:00 AM',
+      isLive: true
+    }))
+
+    setLogbook(prev => ({
+      ...prev,
+      subject: subjectName
+    }))
+  }, [currentUser, isTeacher])
+
+  // Cargar nómina de estudiantes real desde Supabase (public.profiles y public.students)
+  const loadRosterFromSupabase = useCallback(async (roomId = '204') => {
+    if (!supabase) return
+
+    try {
+      // 1. Consultar estudiantes asignados a este salón en public.profiles
+      const { data: profStudents } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_type', 'estudiante')
+        .eq('classroom_id', roomId)
+        .order('full_name', { ascending: true })
+
+      let baseStudents = []
+      if (profStudents && profStudents.length > 0) {
+        baseStudents = profStudents.map(p => ({
+          id: p.id,
+          name: p.full_name,
+          ci: p.ci,
+          section: p.section || 'Sección B',
+          initials: p.avatar_initials || p.full_name?.substring(0, 2).toUpperCase() || 'ES'
+        }))
+      } else {
+        // Fallback a public.students
+        const { data: dbStudents } = await supabase
+          .from('students')
+          .select('*')
+          .order('name', { ascending: true })
+
+        if (dbStudents && dbStudents.length > 0) {
+          baseStudents = dbStudents.map(s => ({
+            id: s.id,
+            name: s.name,
+            ci: s.ci,
+            section: s.section,
+            initials: s.name?.substring(0, 2).toUpperCase() || 'ES'
+          }))
+        }
+      }
+
+      if (baseStudents.length === 0) return
+
+      // Consultar asistencias de las últimas 12 horas para este salón
+      const { data: recentLogs } = await supabase
+        .from('attendance_logs')
+        .select('student_ci, status, scan_timestamp')
+        .eq('classroom_id', roomId)
+        .gte('scan_timestamp', new Date(Date.now() - 12 * 3600 * 1000).toISOString())
+
+      const logsMap = new Map()
+      if (recentLogs) {
+        recentLogs.forEach(l => {
+          const clean = l.student_ci?.replace(/[^0-9]/g, '') || l.student_ci?.trim()
+          logsMap.set(clean, l.status)
+        })
+      }
+
+      const formatted = baseStudents.map(s => {
+        const cleanCi = s.ci?.replace(/[^0-9]/g, '') || s.ci?.trim()
+        const logStatus = logsMap.get(cleanCi)
+
+        let status = 'pending'
+        let time = undefined
+
+        if (logStatus === 'presente') {
+          status = 'present_qr'
+          time = '10:05 AM'
+        } else if (logStatus === 'retardo') {
+          status = 'late'
+          time = '10:14 AM'
+        }
+
+        return {
+          id: s.id,
+          name: s.name,
+          ci: s.ci,
+          section: s.section,
+          status: status,
+          time: time,
+          initials: s.initials
+        }
+      })
+
+      setStudents(formatted)
+    } catch (e) {
+      console.warn('Advertencia cargando estudiantes desde Supabase:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadRosterFromSupabase(classInfo.classroomId || '204')
+  }, [classInfo.classroomId, loadRosterFromSupabase])
+
+  // Restaurar estado guardado en almacenamiento local
   useEffect(() => {
     async function loadStoredClass() {
       try {
@@ -100,7 +198,6 @@ export function ClassSessionProvider({ children }) {
         const stored = await AsyncStorage.getItem('asisto_session_state')
         if (stored) {
           const parsed = JSON.parse(stored)
-          // Descartar datos obsoletos con materias universitarias o temas cableados anteriores
           if (
             parsed.logbook?.topic?.includes('Racionalización') ||
             parsed.logbook?.subject?.includes('Algoritmos') ||
@@ -110,7 +207,7 @@ export function ClassSessionProvider({ children }) {
             return
           }
           if (parsed.sessionStatus) setSessionStatus(parsed.sessionStatus)
-          if (parsed.students) setStudents(parsed.students)
+          if (parsed.students && parsed.students.length > 0) setStudents(parsed.students)
           if (parsed.logbook) setLogbook(parsed.logbook)
         }
       } catch (e) {
@@ -120,7 +217,7 @@ export function ClassSessionProvider({ children }) {
     loadStoredClass()
   }, [])
 
-  // Sincronización en tiempo real con Supabase para resoluciones de justificaciones (HU08)
+  // Sincronización en tiempo real con Supabase para incidencias y justificaciones
   useEffect(() => {
     if (!supabase) return
 
@@ -137,10 +234,13 @@ export function ClassSessionProvider({ children }) {
         if (error || !data || !isMounted) return
 
         const activeResetTime = lastIncidentResetRef.current || lastIncidentReset
+        const studentCi = currentUser?.ci || 'V-28.452.190'
+        const studentName = currentUser?.name || 'Daniel'
+
         const studentIncident = data.find(
           item =>
-            (item.student_name?.toLowerCase().includes('daniel') ||
-             item.student_ci?.includes('29.842.119') ||
+            (item.student_name?.toLowerCase().includes(studentName.toLowerCase()) ||
+             item.student_ci?.includes(studentCi.replace(/[^0-9]/g, '')) ||
              item.student_ci?.includes('28.452.190')) &&
             (!activeResetTime || new Date(item.created_at) > new Date(activeResetTime))
         )
@@ -148,7 +248,7 @@ export function ClassSessionProvider({ children }) {
         if (studentIncident) {
           setStudents(prev => {
             const current = prev.find(
-              s => s.ci.includes('29.842.119') || s.name.toLowerCase().includes('daniel álvarez')
+              s => s.ci.includes(studentCi) || s.name.toLowerCase().includes(studentName.toLowerCase())
             )
             if (!current) return prev
 
@@ -160,7 +260,7 @@ export function ClassSessionProvider({ children }) {
             }
 
             const updated = prev.map(s => {
-              if (s.ci.includes('29.842.119') || s.name.toLowerCase().includes('daniel álvarez')) {
+              if (s.ci.includes(studentCi) || s.name.toLowerCase().includes(studentName.toLowerCase())) {
                 if (studentIncident.status === 'Rechazada') {
                   return {
                     ...s,
@@ -219,7 +319,7 @@ export function ClassSessionProvider({ children }) {
       clearInterval(interval)
       if (channel) supabase.removeChannel(channel)
     }
-  }, [])
+  }, [currentUser, lastIncidentReset])
 
   const persistOffline = async (newStudents, newStatus, newLogbook) => {
     try {
@@ -242,25 +342,26 @@ export function ClassSessionProvider({ children }) {
   const [qrTimestamp, setQrTimestamp] = useState(() => Date.now())
   const [qrSecondsRemaining, setQrSecondsRemaining] = useState(() => getQrSecondsRemaining())
 
-  // Sincronización multi-dispositivo y compensación de desfase de reloj (PC Docente <-> Móvil Estudiante)
+  // Sincronización multi-dispositivo y compensación de desfase de reloj
   const [remoteTeacherToken, setRemoteTeacherToken] = useState(null)
   const [remoteTeacherPreviousToken, setRemoteTeacherPreviousToken] = useState(null)
   const [remoteTeacherTimestamp, setRemoteTeacherTimestamp] = useState(null)
   const [clockOffset, setClockOffset] = useState(0)
   const lastKnownTeacherTsRef = useRef(Date.now())
 
-  // Publicar token activo en Supabase para que cualquier dispositivo móvil lo reciba en tiempo real (solo rol docente)
-  const publishTeacherToken = async (token, ts) => {
+  // Publicar token activo en Supabase para el aula asignada
+  const publishTeacherToken = useCallback(async (token, ts) => {
     if (!supabase || !isTeacher) return
+    const roomId = classInfo.classroomId || '204'
     try {
       await supabase
         .from('classrooms')
         .update({ sub_note: `QR:${token}:${ts}` })
-        .eq('id', '204')
+        .eq('id', roomId)
     } catch (e) {
       // Fallback offline
     }
-  }
+  }, [classInfo.classroomId, isTeacher])
 
   // Sincronizar el token dinámico y la cuenta regresiva con el reloj TOTP
   useEffect(() => {
@@ -284,18 +385,19 @@ export function ClassSessionProvider({ children }) {
       }
     }, 1000)
     return () => clearInterval(timer)
-  }, [qrToken, qrTimestamp, isTeacher])
+  }, [qrToken, qrTimestamp, isTeacher, publishTeacherToken])
 
-  // Escuchar en tiempo real el token proyectado por el docente en Supabase (HU03/HU07)
+  // Escuchar en tiempo real el token proyectado por el docente en el aula
   useEffect(() => {
     if (!supabase) return
+    const roomId = classInfo.classroomId || '204'
 
     const fetchClassroomToken = async () => {
       try {
         const { data } = await supabase
           .from('classrooms')
           .select('sub_note')
-          .eq('id', '204')
+          .eq('id', roomId)
           .single()
         if (data?.sub_note?.startsWith('QR:')) {
           const [, token, ts] = data.sub_note.split(':')
@@ -318,10 +420,10 @@ export function ClassSessionProvider({ children }) {
     const polling = setInterval(fetchClassroomToken, 4000)
 
     const channel = supabase
-      .channel('mobile_classroom_token_listener')
+      .channel(`mobile_classroom_token_${roomId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'classrooms' },
+        { event: '*', schema: 'public', table: 'classrooms', filter: `id=eq.${roomId}` },
         (payload) => {
           if (payload.new?.sub_note?.startsWith('QR:')) {
             const [, token, ts] = payload.new.sub_note.split(':')
@@ -346,31 +448,27 @@ export function ClassSessionProvider({ children }) {
       clearInterval(polling)
       if (channel) supabase.removeChannel(channel)
     }
-  }, [])
+  }, [classInfo.classroomId])
 
   const validateQrToken = (entered) => {
     if (!entered) return false
     const str = entered.toString().trim()
-    console.log('[QR Validation] Código recibido:', str)
 
-    // Extraer el token numérico del payload del QR
     let candidate = str
     if (str.includes(':')) {
       const parts = str.split(':')
-      // Formato: ASISTO:aula:TOKEN:timestamp
       candidate = parts.length >= 3 ? parts[2] : parts[parts.length - 1]
     }
     const clean = candidate.replace(/[^0-9]/g, '')
     if (!clean || clean.length < 6) return false
 
-    // Validación estricta: SOLO el slot TOTP activo de 15 segundos
     const currentToken = getDynamicQrToken()
-    if (clean === currentToken) {
-      console.log('[QR Validation] Token válido (slot activo):', currentToken)
+    const prevToken = getDynamicQrToken(Date.now() - 15000)
+
+    if (clean === currentToken || clean === prevToken || clean === remoteTeacherToken || clean === remoteTeacherPreviousToken) {
       return true
     }
 
-    console.warn('[QR Validation] Token rechazado:', clean, '— Token activo:', currentToken)
     return false
   }
 
@@ -379,7 +477,7 @@ export function ClassSessionProvider({ children }) {
     setSessionStatus('cancelled')
     setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
     await persistOffline(students, 'cancelled', logbook)
-    await cancelClassroomSession(classInfo.classroom || '204', reason)
+    await cancelClassroomSession(classInfo.classroomId || '204', reason)
   }
 
   const markManualAttendance = async (studentId, cause) => {
@@ -398,12 +496,13 @@ export function ClassSessionProvider({ children }) {
       }
       return s
     })
+
     setStudents(updated)
     await persistOffline(updated)
     if (affectedStudent) {
       await sendAttendanceLog({
         studentCi: affectedStudent.ci,
-        classroomId: classInfo.classroom || '204',
+        classroomId: classInfo.classroomId || '204',
         subject: classInfo.subject,
         status: 'presente',
         geofenceVerified: true,
@@ -414,8 +513,11 @@ export function ClassSessionProvider({ children }) {
 
   const registerIncident = async (studentCi, folio, motive, description, fileName) => {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const studentTargetCi = studentCi || currentUser?.ci || 'V-28.452.190'
+    const studentTargetName = currentUser?.name || 'Daniel Álvarez'
+
     const updated = students.map(s => {
-      if (s.ci.includes(studentCi) || s.name.toLowerCase().includes('daniel álvarez')) {
+      if (s.ci.includes(studentTargetCi) || s.name.toLowerCase().includes(studentTargetName.toLowerCase())) {
         return {
           ...s,
           status: 'in_review',
@@ -433,7 +535,7 @@ export function ClassSessionProvider({ children }) {
   }
 
   const saveLogbook = async (topic, incidentType, observations) => {
-    const newLog = { topic, incidentType, observations }
+    const newLog = { topic, incidentType, observations, subject: classInfo.subject }
     setLogbook(newLog)
     await persistOffline(students, sessionStatus, newLog)
   }
@@ -450,12 +552,15 @@ export function ClassSessionProvider({ children }) {
     })
     setStudents(finalised)
     await persistOffline(finalised, 'closed')
-    await closeClassroomSession(classInfo.classroom || '204')
+    await closeClassroomSession(classInfo.classroomId || '204')
   }
 
   const registerStudentAttendance = async (studentCi, status, time, observations = null) => {
+    const targetCi = studentCi || currentUser?.ci || 'V-28.452.190'
+    const targetName = currentUser?.name || 'Daniel Álvarez'
+
     const updated = students.map(s => {
-      if (s.ci.includes(studentCi) || s.name.toLowerCase().includes('daniel álvarez')) {
+      if (s.ci.includes(targetCi) || s.name.toLowerCase().includes(targetName.toLowerCase())) {
         return {
           ...s,
           status: status,
@@ -468,49 +573,145 @@ export function ClassSessionProvider({ children }) {
     })
     setStudents(updated)
     await persistOffline(updated)
+
+    // Enviar a Supabase para disparar actualización del Mapa de Calor en tiempo real
     await sendAttendanceLog({
-      studentCi,
-      classroomId: classInfo.classroom || '204',
+      studentCi: targetCi,
+      classroomId: classInfo.classroomId || '204',
       subject: classInfo.subject,
       status: (status === 'present_qr' || status === 'present_manual') ? 'presente' : status === 'late' ? 'retardo' : 'ausente'
     })
   }
 
-  const resetSession = async () => {
+  const resetSession = async ({ cleanAttendance = false } = {}) => {
     const now = new Date().toISOString()
     setLastIncidentReset(now)
     lastIncidentResetRef.current = now
     setSessionStatus('active')
+
+    const roomNum = currentUser?.classroomId || '204'
+    const roomDisplayName = roomNum.startsWith('Aula') ? roomNum : `Aula ${roomNum}`
+    const subjectName = currentUser?.subject || 'Matemática'
+    const sectionName = `${currentUser?.yearLevel || '5to Año'} • ${currentUser?.section || 'Sección B'}`
+    const teacherName = isTeacher ? (currentUser?.name || 'Prof. Roberto García') : 'Prof. Roberto García'
+
+    if (cleanAttendance && supabase) {
+      try {
+        // 1. Eliminar logs de asistencia previos de este salón para iniciar prueba fresca
+        await supabase
+          .from('attendance_logs')
+          .delete()
+          .eq('classroom_id', roomNum)
+
+        // 2. Restablecer aula en Supabase
+        await supabase
+          .from('classrooms')
+          .update({
+            status: 'normal',
+            status_label: 'EN CURSO',
+            badge_color: 'green',
+            present: 0,
+            progress_percent: 0,
+            delay_minutes: 0,
+            note: 'Clase iniciada • Esperando escaneos QR',
+            sub_note: 'Sesión activa iniciada desde App Docente',
+            has_action: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', roomNum)
+      } catch (err) {
+        console.warn('Error limpiando asistencia en Supabase:', err)
+      }
+    }
+
     setClassInfo({
-      subject: 'Matemáticas',
-      section: '4to Año • Sección B',
-      classroom: 'Aula 12',
+      subject: subjectName,
+      section: sectionName,
+      classroom: roomDisplayName,
+      classroomId: roomNum,
       timeBlock: '07:30 - 09:00 AM',
-      teacher: 'Prof. Roberto García',
+      teacher: teacherName,
       qrStatus: 'Activo',
       elapsedMinutes: 5,
       isLive: true
     })
-    setStudents(INITIAL_STUDENTS)
+
+    await loadRosterFromSupabase(roomNum)
     setCancellationReason('')
     setLogbook({
-      subject: 'Matemáticas',
+      subject: subjectName,
       topic: 'Tema programático del día\nDesarrollo de contenidos y actividades prácticas',
       incidentType: 'Clase sin novedades',
       observations: 'Desarrollo normal de la sesión pedagógica según la planificación curricular. Participación activa de los estudiantes en las actividades propuestas.'
     })
+
     try {
       await AsyncStorage.removeItem('asisto_session_state')
+      await AsyncStorage.removeItem('asisto_attendance_history')
       await AsyncStorage.setItem('asisto_last_incident_reset', now)
       if (supabase) {
+        const studentCi = currentUser?.ci || 'V-28.452.190'
         await supabase
           .from('incidents')
           .delete()
-          .ilike('student_name', '%daniel%')
+          .ilike('student_ci', `%${studentCi.replace(/[^0-9]/g, '')}%`)
       }
     } catch (e) {
       console.warn('Error al limpiar estado local:', e)
     }
+  }
+
+  // Reiniciar asistencia individual de un estudiante (HU06, HU07)
+  const resetStudentAttendance = async (studentCi, roomId) => {
+    const targetRoom = roomId || classInfo.classroomId || '204'
+    const targetCi = studentCi || currentUser?.ci || 'V-28.452.190'
+    const cleanCi = targetCi.replace(/[^0-9]/g, '')
+
+    if (supabase) {
+      try {
+        // 1. Eliminar asistencia del estudiante en Supabase para este salón
+        await supabase
+          .from('attendance_logs')
+          .delete()
+          .eq('classroom_id', targetRoom)
+          .ilike('student_ci', `%${cleanCi}%`)
+
+        // 2. Eliminar incidencias previas del estudiante
+        await supabase
+          .from('incidents')
+          .delete()
+          .ilike('student_ci', `%${cleanCi}%`)
+      } catch (err) {
+        console.warn('Error eliminando asistencia de estudiante en Supabase:', err)
+      }
+    }
+
+    // 3. Resetear el estado del estudiante en la nómina local
+    setStudents(prev =>
+      prev.map(s => {
+        if (s.ci?.replace(/[^0-9]/g, '').includes(cleanCi) || s.name?.toLowerCase().includes((currentUser?.name || '').toLowerCase())) {
+          return {
+            ...s,
+            status: 'pending',
+            time: undefined,
+            observations: null,
+            contingency: null,
+            incidentStatus: null
+          }
+        }
+        return s
+      })
+    )
+
+    // 4. Limpiar almacenamiento local
+    try {
+      await AsyncStorage.removeItem('asisto_session_state')
+      await AsyncStorage.removeItem('asisto_attendance_history')
+      await AsyncStorage.setItem('asisto_last_incident_reset', new Date().toISOString())
+    } catch (e) {}
+
+    // 5. Recargar nómina
+    await loadRosterFromSupabase(targetRoom)
   }
 
   const metrics = {
@@ -540,6 +741,7 @@ export function ClassSessionProvider({ children }) {
         executeFinalClosure,
         registerStudentAttendance,
         resetSession,
+        resetStudentAttendance,
         registerIncident,
         qrToken,
         previousQrToken,

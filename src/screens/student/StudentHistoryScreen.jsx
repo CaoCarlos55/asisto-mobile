@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   View,
   Text,
@@ -8,15 +8,17 @@ import {
   ScrollView
 } from 'react-native'
 import { ChevronLeft } from 'lucide-react-native'
+import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
+import { supabase } from '../../api/supabaseClient'
 import { styles } from '../../styles/student/StudentHistory.styles'
 
-const HISTORY_DATA = [
+const FALLBACK_HISTORY = [
   {
     id: 'h1',
-    subject: 'Matemáticas',
+    subject: 'Matemática',
     filterKey: 'mat',
-    sub: '4to Año B • Aula 12 • Prof. Roberto García',
+    sub: '5to Año B • Aula 204 • Prof. Roberto García',
     time: 'Hoy 07:35 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
@@ -25,7 +27,7 @@ const HISTORY_DATA = [
     id: 'h2',
     subject: 'Física',
     filterKey: 'fis',
-    sub: '4to Año B • Aula 12 • Prof. Méndez',
+    sub: '5to Año B • Aula 101 • Prof. Patricia Méndez',
     time: 'Ayer 08:44 AM • Registro con retardo',
     status: 'late',
     statusText: 'Retardo'
@@ -34,16 +36,16 @@ const HISTORY_DATA = [
     id: 'h3',
     subject: 'Química',
     filterKey: 'qui',
-    sub: '4to Año B • Lab. Ciencias • Prof. Silva',
+    sub: '5to Año B • Aula 97 • Prof. Carmen Ortiz',
     time: 'Vie 25 Sep • 09:15 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
   },
   {
     id: 'h4',
-    subject: 'Castellano y Literatura',
+    subject: 'Castellano',
     filterKey: 'cas',
-    sub: '4to Año B • Aula 12 • Prof. Rivas',
+    sub: '5to Año B • Aula 97 • Prof. Carmen Ortiz',
     time: 'Mar 22 Sep • Causa médica informada',
     note: 'Justificativo médico en validación',
     status: 'in_review',
@@ -53,7 +55,7 @@ const HISTORY_DATA = [
     id: 'h5',
     subject: 'Biología',
     filterKey: 'bio',
-    sub: '4to Año B • Lab. Ciencias • Prof. García',
+    sub: '5to Año B • Aula 201 • Prof. Alberto Díaz',
     time: 'Lun 21 Sep • 07:32 AM • Asistencia puntual en aula',
     status: 'present_qr',
     statusText: 'Asistió (QR)'
@@ -61,25 +63,75 @@ const HISTORY_DATA = [
 ]
 
 export default function StudentHistoryScreen({ navigation }) {
+  const { currentUser } = useAuth()
   const { students, classInfo } = useClassSession()
   const [activeFilter, setActiveFilter] = useState('all')
+  const [serverLogs, setServerLogs] = useState([])
+
+  const studentCi = currentUser?.ci || 'V-28.452.190'
+  const studentName = currentUser?.name || 'Daniel'
+
+  // Consultar registros reales de la bitácora viva en Supabase
+  useEffect(() => {
+    if (!supabase) return
+
+    async function fetchLogs() {
+      try {
+        const cleanDigits = studentCi.replace(/[^0-9]/g, '')
+        const { data, error } = await supabase
+          .from('attendance_logs')
+          .select('*')
+          .or(`student_ci.ilike.%${cleanDigits}%,student_ci.ilike.%${studentCi}%`)
+          .order('scan_timestamp', { ascending: false })
+          .limit(20)
+
+        if (!error && data && data.length > 0) {
+          const mapped = data.map(log => {
+            const dateObj = new Date(log.scan_timestamp)
+            const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            const isLate = log.status === 'retardo'
+            const isJustified = log.status === 'justificado'
+            const isPresent = log.status === 'presente'
+
+            return {
+              id: log.id,
+              subject: log.subject || 'Matemática',
+              filterKey: log.subject?.toLowerCase().startsWith('fís') ? 'fis' : log.subject?.toLowerCase().startsWith('quím') ? 'qui' : 'mat',
+              sub: `5to Año B • Aula ${log.classroom_id || '204'} • Verificado en Plantel`,
+              time: `${dateObj.toLocaleDateString()} ${timeStr} • ${isPresent ? 'Escaneo QR en aula' : isLate ? 'Registro con retardo' : 'Justificado'}`,
+              status: isPresent ? 'present_qr' : isLate ? 'late' : isJustified ? 'approved' : 'present_qr',
+              statusText: isPresent ? 'Asistió (QR)' : isLate ? 'Retardo' : isJustified ? 'Justificada' : 'Asistió'
+            }
+          })
+          setServerLogs(mapped)
+        }
+      } catch (err) {
+        console.warn('Error al consultar historial en Supabase:', err)
+      }
+    }
+
+    fetchLogs()
+  }, [studentCi])
 
   const studentRecord = students?.find(
-    s => s.name.toLowerCase().includes('daniel álvarez') || s.ci.includes('29.842.119')
+    s => s.ci.includes(studentCi.replace(/[^0-9]/g, '')) || s.name.toLowerCase().includes(studentName.toLowerCase())
   )
 
   const dynamicHistory = useMemo(() => {
-    let list = [...HISTORY_DATA]
+    const baseList = serverLogs.length > 0 ? serverLogs : FALLBACK_HISTORY
+    let list = [...baseList]
+
     if (studentRecord && studentRecord.status !== 'pending') {
       const isPresent = studentRecord.status === 'present_qr' || studentRecord.status === 'present_manual'
       const isLate = studentRecord.status === 'late'
       const isInReview = studentRecord.status === 'in_review'
       const isRejected = studentRecord.status === 'rejected' || studentRecord.incidentStatus === 'Rechazada'
       const isApproved = studentRecord.incidentStatus === 'Aprobada'
+
       const activeItem = {
         id: 'h-active',
         subject: classInfo.subject,
-        filterKey: 'mat',
+        filterKey: classInfo.subject?.toLowerCase().startsWith('fís') ? 'fis' : classInfo.subject?.toLowerCase().startsWith('quím') ? 'qui' : 'mat',
         sub: `${classInfo.section} • ${classInfo.classroom} • ${classInfo.teacher}`,
         time: `Hoy ${studentRecord.time || '10:05 AM'} • ${
           isRejected ? `Rechazada (${studentRecord.incidentFolio || '#INC-2026-0842'})` :
@@ -95,10 +147,10 @@ export default function StudentHistoryScreen({ navigation }) {
         status: isRejected ? 'rejected' : isApproved ? 'approved' : studentRecord.status,
         statusText: isRejected ? 'Rechazada' : isApproved ? 'Justificada' : isPresent ? 'Asistió (QR)' : isLate ? 'Retardo' : isInReview ? 'En revisión Coord.' : 'Inasistencia'
       }
-      list = [activeItem, ...list.filter(item => item.id !== 'h1')]
+      list = [activeItem, ...list.filter(item => item.id !== 'h1' && item.id !== 'h-active')]
     }
     return list
-  }, [studentRecord, classInfo])
+  }, [studentRecord, classInfo, serverLogs])
 
   const filteredHistory = activeFilter === 'all'
     ? dynamicHistory
@@ -178,13 +230,13 @@ export default function StudentHistoryScreen({ navigation }) {
           <Text style={styles.kpiCardTitle}>DESGLOSE GENERAL DE ASISTENCIA</Text>
           <View style={styles.kpiRow}>
             <View>
-              <Text style={styles.kpiPct}>94%</Text>
+              <Text style={styles.kpiPct}>96%</Text>
               <Text style={styles.kpiGrade}>Regular</Text>
               <Text style={styles.kpiStatus}>Sin riesgo</Text>
             </View>
             <View style={styles.kpiRight}>
-              <Text style={styles.kpiCount}>24 Asistencias (QR)</Text>
-              <Text style={styles.kpiFails}>1 Retardo • 1 Justificada</Text>
+              <Text style={styles.kpiCount}>Asistencia Oficial</Text>
+              <Text style={styles.kpiFails}>Sincronizado con Supabase</Text>
             </View>
           </View>
 
@@ -214,7 +266,7 @@ export default function StudentHistoryScreen({ navigation }) {
               onPress={() => setActiveFilter('mat')}
             >
               <Text style={[styles.filterChipText, activeFilter === 'mat' && styles.filterChipTextActive]}>
-                Matemáticas
+                Matemática
               </Text>
             </TouchableOpacity>
 

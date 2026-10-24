@@ -13,10 +13,21 @@ import { styles } from '../../styles/teacher/TeacherOutOfSchedule.styles'
 
 export default function TeacherOutOfScheduleScreen({ navigation }) {
   const { currentUser, logout } = useAuth()
-  const { resetSession } = useClassSession()
+  const { classInfo, resetSession } = useClassSession()
+
+  const formattedServerTime = React.useMemo(() => {
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const now = new Date()
+    const dayName = days[now.getDay()]
+    const dayNum = now.getDate()
+    const monthName = months[now.getMonth()]
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return `${dayName} ${dayNum} ${monthName} • ${timeStr}`
+  }, [])
 
   const handleSimulateClassStart = async () => {
-    await resetSession()
+    await resetSession({ cleanAttendance: true })
     navigation.navigate('TeacherDashboard')
   }
 
@@ -31,7 +42,7 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName} numberOfLines={1}>{currentUser?.name || 'Prof. Roberto García'}</Text>
-              <Text style={styles.profileDept} numberOfLines={1}>{currentUser?.dept || 'Área de Matemáticas • Año Escolar 2025-2026'}</Text>
+              <Text style={styles.profileDept} numberOfLines={1}>{currentUser?.dept || `${classInfo.subject} • Año Escolar 2026-2027`}</Text>
             </View>
           </View>
           <TouchableOpacity onPress={logout} style={styles.logoutBtn} activeOpacity={0.7} accessibilityLabel="Cerrar sesión">
@@ -60,24 +71,24 @@ export default function TeacherOutOfScheduleScreen({ navigation }) {
           {/* Reloj de Servidor */}
           <View style={styles.serverTimePill}>
             <View style={styles.greenDot} />
-            <Text style={styles.serverTimeText}>Reloj Servidor: Martes 29 Sep • 07:11 AM</Text>
+            <Text style={styles.serverTimeText}>Reloj Servidor: {formattedServerTime}</Text>
           </View>
         </View>
 
         {/* Tarjeta de Próxima Clase */}
         <View style={styles.nextClassCard}>
           <Text style={styles.nextClassLabel}>PRÓXIMA CLASE EN CALENDARIO</Text>
-          <Text style={styles.nextClassTitle}>Matemáticas</Text>
-          <Text style={styles.nextClassSub}>4to Año • Sección B</Text>
+          <Text style={styles.nextClassTitle}>{classInfo.subject}</Text>
+          <Text style={styles.nextClassSub}>{classInfo.section}</Text>
 
           <View style={styles.badgeRow}>
             <View style={styles.badgeItem}>
               <MapPin size={13} color="#b91c1c" />
-              <Text style={styles.badgeText}>Aula 12</Text>
+              <Text style={styles.badgeText}>{classInfo.classroom}</Text>
             </View>
             <View style={styles.badgeItem}>
               <Clock size={13} color="#64748b" />
-              <Text style={styles.badgeText}>07:30 - 09:00 AM</Text>
+              <Text style={styles.badgeText}>{classInfo.timeBlock}</Text>
             </View>
             <View style={[styles.badgeItem, styles.badgeHighlight]}>
               <Text style={styles.badgeHighlightText}>En 19 min</Text>

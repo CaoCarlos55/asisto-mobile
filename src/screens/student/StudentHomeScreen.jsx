@@ -14,11 +14,16 @@ import { styles } from '../../styles/student/StudentHome.styles'
 
 export default function StudentHomeScreen({ navigation }) {
   const { currentUser, logout } = useAuth()
-  const { classInfo, sessionStatus, students, resetSession } = useClassSession()
+  const { classInfo, sessionStatus, students, resetStudentAttendance } = useClassSession()
+
+  const studentCi = currentUser?.ci || 'V-28.452.190'
+  const studentFirstName = currentUser?.name ? currentUser.name.split(' ')[0] : 'Estudiante'
 
   const studentRecord = students.find(
-    s => s.name.toLowerCase().includes('daniel álvarez') || s.ci.includes('29.842.119')
-  )
+    s => (currentUser?.ci && s.ci?.includes(currentUser.ci.replace(/[^0-9]/g, ''))) ||
+         (currentUser?.name && s.name?.toLowerCase().includes(currentUser.name.toLowerCase()))
+  ) || students[0]
+
   const isPresent = studentRecord?.status === 'present_qr' || studentRecord?.status === 'present_manual'
   const isLate = studentRecord?.status === 'late'
   const isInReview = studentRecord?.status === 'in_review'
@@ -36,7 +41,7 @@ export default function StudentHomeScreen({ navigation }) {
               <Text style={styles.avatarText}>{currentUser?.initials || 'DA'}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.greeting}>¡Hola, Daniel!</Text>
+              <Text style={styles.greeting}>¡Hola, {studentFirstName}!</Text>
               <Text style={styles.name} numberOfLines={1}>{currentUser?.name || 'Daniel Álvarez'}</Text>
             </View>
           </View>
@@ -222,10 +227,10 @@ export default function StudentHomeScreen({ navigation }) {
         <TouchableOpacity
           style={styles.resetSimBtn}
           onPress={async () => {
-            await resetSession()
+            await resetStudentAttendance(studentCi, classInfo.classroomId)
             Alert.alert(
-              'Simulación Reiniciada',
-              'El alumno ha vuelto al estado pendiente y se limpiaron las incidencias previas. ¡Ya puedes probar nuevamente el escaneo o justificativo!'
+              'Estado del Alumno Reiniciado',
+              'Tu asistencia y justificaciones se han limpiado en la nube. Ya puedes probar nuevamente el escaneo del código QR.'
             )
           }}
           activeOpacity={0.8}

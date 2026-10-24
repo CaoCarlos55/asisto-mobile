@@ -8,14 +8,47 @@ import {
   StatusBar
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { QrCode, Users, FileText, User, ChevronRight, Clock, RotateCcw } from 'lucide-react-native'
+import { QrCode, Users, FileText, User, ChevronRight, Clock, RotateCcw, LogOut } from 'lucide-react-native'
+import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
+import { startClassroomSession, closeClassroomSession } from '../../api/api'
 import { styles } from '../../styles/teacher/TeacherClassDashboard.styles'
 
 export default function TeacherClassDashboardScreen({ navigation }) {
+  const { logout, currentUser } = useAuth()
   const { classInfo, metrics, resetSession } = useClassSession()
 
+  // Sincronizar aula activa en la nube al ingresar a la pantalla
+  React.useEffect(() => {
+    if (currentUser && classInfo.classroomId) {
+      startClassroomSession({
+        classroomId: classInfo.classroomId,
+        subject: classInfo.subject,
+        teacher: classInfo.teacher,
+        enrolled: metrics.total || 1
+      })
+    }
+  }, [classInfo.classroomId, classInfo.subject, classInfo.teacher, metrics.total, currentUser])
+
   const progressPercent = `${Math.min(100, Math.round((metrics.presents / (metrics.total || 1)) * 100))}%`
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Deseas cerrar tu sesión como docente? El aula quedará en estado disponible.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await closeClassroomSession(classInfo.classroomId)
+            await logout()
+          }
+        }
+      ]
+    )
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -29,15 +62,35 @@ export default function TeacherClassDashboardScreen({ navigation }) {
               <Text style={styles.livePillText}>CLASE EN CURSO</Text>
             </View>
 
-            <View style={styles.onlineRow}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>En línea</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={styles.onlineRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>En línea</Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleLogout}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 8
+                }}
+                activeOpacity={0.75}
+                accessibilityLabel="Cerrar sesión"
+              >
+                <LogOut size={13} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Salir</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
           <Text style={styles.classTitle}>{classInfo.subject}</Text>
           <Text style={styles.classSubtitle}>
-            {classInfo.section} • {classInfo.classroom} • {classInfo.timeBlock}
+            {classInfo.teacher} • {classInfo.section} • {classInfo.classroom}
           </Text>
 
           <View style={styles.elapsedRow}>
@@ -166,8 +219,8 @@ export default function TeacherClassDashboardScreen({ navigation }) {
           <TouchableOpacity
             style={styles.resetSimBtn}
             onPress={async () => {
-              await resetSession()
-              Alert.alert('Nómina Reiniciada', 'La nómina, asistencias y código QR han vuelto al estado inicial de prueba.')
+              await resetSession({ cleanAttendance: true })
+              Alert.alert('Nómina y QR Reiniciados', 'La nómina, asistencias en la nube y el código QR han vuelto al estado inicial de prueba (0 presentes).')
             }}
             activeOpacity={0.8}
           >
