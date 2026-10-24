@@ -291,5 +291,132 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     maxWidth: 280
+  },
+  modeControlCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 16,
+    marginBottom: 16,
+    ...theme.shadows.card
+  },
+  modeControlHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6
+  },
+  modeControlTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1e3a8a',
+    letterSpacing: 0.5
+  },
+  modeStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12
+  },
+  modeBadgeGreen: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac'
+  },
+  modeBadgeAmber: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fcd34d'
+  },
+  modeBadgeRed: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fca5a5'
+  },
+  modeStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0f172a'
+  },
+  modeControlDesc: {
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 16,
+    marginBottom: 12
+  },
+  modeButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%'
+  },
+  modeBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
+  },
+  modeBtnActiveGreen: {
+    backgroundColor: '#15803d',
+    borderColor: '#15803d'
+  },
+  modeBtnActiveAmber: {
+    backgroundColor: '#b45309',
+    borderColor: '#b45309'
+  },
+  modeBtnActiveRed: {
+    backgroundColor: '#b91c1c',
+    borderColor: '#b91c1c'
+  },
+  modeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+    textAlign: 'center'
+  },
+  modeBtnTextActive: {
+    color: '#ffffff'
+  },
+  fullscreenModeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+    maxWidth: 340,
+    width: '100%'
+  },
+  fullscreenModeBtn: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  fullscreenModeBtnActiveGreen: {
+    backgroundColor: '#15803d',
+    borderColor: '#22c55e'
+  },
+  fullscreenModeBtnActiveAmber: {
+    backgroundColor: '#b45309',
+    borderColor: '#f59e0b'
+  },
+  fullscreenModeBtnActiveRed: {
+    backgroundColor: '#b91c1c',
+    borderColor: '#ef4444'
+  },
+  fullscreenModeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8'
+  },
+  fullscreenModeBtnTextActive: {
+    color: '#ffffff'
   }
 })

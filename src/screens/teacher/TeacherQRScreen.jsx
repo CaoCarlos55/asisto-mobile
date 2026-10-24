@@ -18,11 +18,13 @@ import { styles } from '../../styles/teacher/TeacherQR.styles'
 const { width } = Dimensions.get('window')
 
 export default function TeacherQRScreen({ navigation }) {
-  const { classInfo, metrics, qrToken, qrTimestamp, qrSecondsRemaining } = useClassSession()
+  const { classInfo, metrics, qrToken, qrTimestamp, qrSecondsRemaining, setAttendanceMode } = useClassSession()
   const [seconds, setSeconds] = useState(515) // 08:35
   const [isFullscreen, setIsFullscreen] = useState(false)
   const qrSize = Math.min(width * 0.62, 230)
   const fullscreenQrSize = Math.min(width * 0.78, 300)
+
+  const activeMode = classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,6 +75,98 @@ export default function TeacherQRScreen({ navigation }) {
           {classInfo.classroom} • Bloque oficial {classInfo.timeBlock}
         </Text>
 
+        {/* Panel de Control de Modo de Asistencia (HU06, HU07, HU08) */}
+        <View style={styles.modeControlCard}>
+          <View style={styles.modeControlHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Clock size={16} color="#1e3a8a" />
+              <Text style={styles.modeControlTitle}>HORA Y MODO DE LA CLASE</Text>
+            </View>
+            <View
+              style={[
+                styles.modeStatusBadge,
+                activeMode === 'inasistencia'
+                  ? styles.modeBadgeRed
+                  : activeMode === 'retardo'
+                  ? styles.modeBadgeAmber
+                  : styles.modeBadgeGreen
+              ]}
+            >
+              <Text style={styles.modeStatusBadgeText}>
+                {activeMode === 'inasistencia'
+                  ? 'MODO INASISTENCIA'
+                  : activeMode === 'retardo'
+                  ? 'MODO RETARDO'
+                  : 'MODO PUNTUAL'}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.modeControlDesc}>
+            {activeMode === 'inasistencia'
+              ? 'Límite de tiempo excedido (> 20 min). Al escanear el código QR, los estudiantes deberán enviar justificación obligatoria con motivos adjuntos.'
+              : activeMode === 'retardo'
+              ? 'Ventana de tolerancia (11-20 min). Los escaneos de código QR se registrarán oficialmente con retardo.'
+              : 'Ventana inicial puntual (0-10 min). Los escaneos de código QR se registrarán como presentes sin penalización.'}
+          </Text>
+
+          <View style={styles.modeButtonsRow}>
+            <TouchableOpacity
+              style={[
+                styles.modeBtn,
+                activeMode === 'normal' && styles.modeBtnActiveGreen
+              ]}
+              onPress={() => setAttendanceMode('normal')}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.modeBtnText,
+                  activeMode === 'normal' && styles.modeBtnTextActive
+                ]}
+              >
+                Puntual (0-10m)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.modeBtn,
+                activeMode === 'retardo' && styles.modeBtnActiveAmber
+              ]}
+              onPress={() => setAttendanceMode('retardo')}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.modeBtnText,
+                  activeMode === 'retardo' && styles.modeBtnTextActive
+                ]}
+              >
+                Modo Retardo (15m)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.modeBtn,
+                activeMode === 'inasistencia' && styles.modeBtnActiveRed
+              ]}
+              onPress={() => setAttendanceMode('inasistencia')}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.modeBtnText,
+                  activeMode === 'inasistencia' && styles.modeBtnTextActive
+                ]}
+              >
+                Modo Inasistencia (&gt;20m)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Tarjeta del Código QR */}
         <View style={styles.qrCard}>
           {/* Contador de tiempo y rotación dinámica */}
@@ -86,7 +180,7 @@ export default function TeacherQRScreen({ navigation }) {
           {/* Gráfico QR dinámico que rota con el token activo */}
           <View style={styles.qrContainer}>
             <QRCodeView
-              value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}:${qrTimestamp || Date.now()}`}
+              value={`ASISTO:${classInfo.classroomId || '204'}:${classInfo.subject || 'Matemática'}:${qrToken}:${qrTimestamp || Date.now()}:${activeMode}`}
               size={qrSize}
               color="#0f172a"
             />
@@ -177,10 +271,66 @@ export default function TeacherQRScreen({ navigation }) {
 
             <View style={styles.fullscreenQrBox}>
               <QRCodeView
-                value={`ASISTO:${classInfo.classroom || 'aula-12'}:${qrToken}:${qrTimestamp || Date.now()}`}
+                value={`ASISTO:${classInfo.classroomId || '204'}:${classInfo.subject || 'Matemática'}:${qrToken}:${qrTimestamp || Date.now()}:${activeMode}`}
                 size={fullscreenQrSize}
                 color="#0b1528"
               />
+            </View>
+
+            <View style={styles.fullscreenModeRow}>
+              <TouchableOpacity
+                style={[
+                  styles.fullscreenModeBtn,
+                  activeMode === 'normal' && styles.fullscreenModeBtnActiveGreen
+                ]}
+                onPress={() => setAttendanceMode('normal')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.fullscreenModeBtnText,
+                    activeMode === 'normal' && styles.fullscreenModeBtnTextActive
+                  ]}
+                >
+                  Puntual
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.fullscreenModeBtn,
+                  activeMode === 'retardo' && styles.fullscreenModeBtnActiveAmber
+                ]}
+                onPress={() => setAttendanceMode('retardo')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.fullscreenModeBtnText,
+                    activeMode === 'retardo' && styles.fullscreenModeBtnTextActive
+                  ]}
+                >
+                  Modo Retardo
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.fullscreenModeBtn,
+                  activeMode === 'inasistencia' && styles.fullscreenModeBtnActiveRed
+                ]}
+                onPress={() => setAttendanceMode('inasistencia')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.fullscreenModeBtnText,
+                    activeMode === 'inasistencia' && styles.fullscreenModeBtnTextActive
+                  ]}
+                >
+                  Modo Inasistencia
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.fullscreenLiveCountPill}>

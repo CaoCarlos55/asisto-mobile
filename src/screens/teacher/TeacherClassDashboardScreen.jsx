@@ -8,7 +8,7 @@ import {
   StatusBar
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { QrCode, Users, FileText, User, ChevronRight, Clock, RotateCcw, LogOut } from 'lucide-react-native'
+import { QrCode, Users, FileText, User, ChevronRight, Clock, RotateCcw, LogOut, AlertTriangle } from 'lucide-react-native'
 import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { startClassroomSession, closeClassroomSession } from '../../api/api'
@@ -16,7 +16,9 @@ import { styles } from '../../styles/teacher/TeacherClassDashboard.styles'
 
 export default function TeacherClassDashboardScreen({ navigation }) {
   const { logout, currentUser } = useAuth()
-  const { classInfo, metrics, resetSession } = useClassSession()
+  const { classInfo, metrics, resetSession, coordinationAlert, setAttendanceMode } = useClassSession()
+
+  const activeMode = classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
 
   // Sincronizar aula activa en la nube al ingresar a la pantalla
   React.useEffect(() => {
@@ -96,13 +98,121 @@ export default function TeacherClassDashboardScreen({ navigation }) {
           <View style={styles.elapsedRow}>
             <Clock size={14} color="#bfdbfe" style={styles.elapsedIcon} />
             <Text style={styles.elapsedText}>
-              Tiempo transcurrido: {classInfo.elapsedMinutes} min (Ventana Tolerancia)
+              Tiempo transcurrido: {classInfo.elapsedMinutes || 5} min ({
+                activeMode === 'inasistencia'
+                  ? 'Modo Inasistencia'
+                  : activeMode === 'retardo'
+                  ? 'Modo Retardo'
+                  : 'Ventana Puntual'
+              })
             </Text>
           </View>
         </View>
 
         {/* Contenedor del Cuerpo con Fondo Claro */}
         <View style={styles.bodySection}>
+          {/* Banner de Alerta de Coordinación */}
+          {coordinationAlert && (
+            <View style={styles.alertBanner}>
+              <AlertTriangle size={20} color="#b45309" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.alertBannerTitle}>ALERTA DE COORDINACIÓN</Text>
+                <Text style={styles.alertBannerText}>{coordinationAlert}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('TeacherCloseClass')}
+                style={styles.alertBannerBtn}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.alertBannerBtnText}>Cerrar Nómina</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Selector Rápido de Modo de Asistencia (HU06, HU07, HU08) */}
+          <View style={styles.dashboardModeCard}>
+            <View style={styles.dashboardModeHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Clock size={15} color="#1e40af" />
+                <Text style={styles.dashboardModeTitle}>HORA Y MODO DE LA CLASE</Text>
+              </View>
+              <View
+                style={[
+                  styles.dashboardModePill,
+                  activeMode === 'inasistencia'
+                    ? styles.modeBadgeRed
+                    : activeMode === 'retardo'
+                    ? styles.modeBadgeAmber
+                    : styles.modeBadgeGreen
+                ]}
+              >
+                <Text style={styles.dashboardModePillText}>
+                  {activeMode === 'inasistencia'
+                    ? 'MODO INASISTENCIA'
+                    : activeMode === 'retardo'
+                    ? 'MODO RETARDO'
+                    : 'MODO PUNTUAL'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.dashboardModeButtonsRow}>
+              <TouchableOpacity
+                style={[
+                  styles.dashboardModeBtn,
+                  activeMode === 'normal' && styles.dashboardModeBtnActiveGreen
+                ]}
+                onPress={() => setAttendanceMode('normal')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dashboardModeBtnText,
+                    activeMode === 'normal' && styles.dashboardModeBtnTextActive
+                  ]}
+                >
+                  Puntual (0-10m)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.dashboardModeBtn,
+                  activeMode === 'retardo' && styles.dashboardModeBtnActiveAmber
+                ]}
+                onPress={() => setAttendanceMode('retardo')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dashboardModeBtnText,
+                    activeMode === 'retardo' && styles.dashboardModeBtnTextActive
+                  ]}
+                >
+                  Modo Retardo (15m)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.dashboardModeBtn,
+                  activeMode === 'inasistencia' && styles.dashboardModeBtnActiveRed
+                ]}
+                onPress={() => setAttendanceMode('inasistencia')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dashboardModeBtnText,
+                    activeMode === 'inasistencia' && styles.dashboardModeBtnTextActive
+                  ]}
+                >
+                  Modo Inasistencia (&gt;20m)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Tarjeta de Asistencia en Vivo */}
           <View style={styles.kpiCard}>
             <Text style={styles.kpiCardTitle}>ASISTENCIA REGISTRADA EN VIVO</Text>

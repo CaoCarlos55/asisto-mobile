@@ -12,14 +12,19 @@ import {
 } from 'react-native'
 import { ChevronLeft, Upload } from 'lucide-react-native'
 import * as DocumentPicker from 'expo-document-picker'
+import { useAuth } from '../../context/AuthContext'
 import { useClassSession } from '../../context/ClassSessionContext'
 import { sendIncidentReport } from '../../api/api'
 import { styles } from '../../styles/student/StudentIncidentForm.styles'
 
 const MOTIVES = ['Salud / Médico', 'Transporte', 'Fuerza Mayor']
 
-export default function StudentIncidentFormScreen({ navigation }) {
+export default function StudentIncidentFormScreen({ navigation, route }) {
+  const { currentUser } = useAuth()
   const { classInfo, registerIncident } = useClassSession()
+  const { autoReason, elapsedMinutes } = route?.params || {}
+  const displayMin = elapsedMinutes || classInfo.elapsedMinutes || 25
+  const scanTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const [selectedMotive, setSelectedMotive] = useState('Salud / Médico')
   const [description, setDescription] = useState(
     'Retraso justificado por contingencia en el traslado matutino hacia la institución.'
@@ -55,10 +60,20 @@ export default function StudentIncidentFormScreen({ navigation }) {
     }
     setIsSubmitting(true)
     try {
+      const studentName = currentUser?.name || 'Daniel Álvarez'
+      const studentCi = currentUser?.ci || 'V-28.452.190'
+      const yearLevel = currentUser?.yearLevel || '5to Año'
+      const subject = classInfo.subject || currentUser?.subject || 'Matemática'
+      const teacher = classInfo.teacher || 'Prof. Roberto García'
+      const room = classInfo.classroom || (currentUser?.classroomId ? `Aula ${currentUser.classroomId}` : 'Aula 204')
+
       const result = await sendIncidentReport({
-        studentName: 'Daniel Álvarez',
-        studentCi: '29.842.119',
-        subject: classInfo.subject,
+        studentName,
+        studentCi,
+        yearLevel,
+        subject,
+        teacher,
+        room,
         statement: description,
         pdfName: attachedFile?.name || 'justificativo_asistencia.pdf',
         tagType: selectedMotive
@@ -66,7 +81,7 @@ export default function StudentIncidentFormScreen({ navigation }) {
 
       const folio = result?.folio || `INC-2026-${Math.floor(1000 + Math.random() * 9000)}`
       await registerIncident(
-        '29.842.119',
+        studentCi,
         folio,
         selectedMotive,
         description,
@@ -109,10 +124,10 @@ export default function StudentIncidentFormScreen({ navigation }) {
               <Text style={styles.alertExclamation}>!</Text>
             </View>
             <View style={styles.alertTextContainer}>
-              <Text style={styles.alertTitle}>Tiempo Límite Excedido (&gt; 20m)</Text>
+              <Text style={styles.alertTitle}>Tiempo Límite Excedido (&gt; 20m • Inasistencia)</Text>
               <Text style={styles.alertSub}>
-                Escaneo: 10:24 AM (Minuto 24){'\n'}
-                Justificación obligatoria
+                Escaneo: {scanTimeStr} (Minuto {displayMin}){'\n'}
+                Justificación obligatoria exigida por el sistema
               </Text>
             </View>
           </View>

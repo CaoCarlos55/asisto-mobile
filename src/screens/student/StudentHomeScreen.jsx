@@ -82,7 +82,11 @@ export default function StudentHomeScreen({ navigation }) {
                 ? 'Asistencia Convalidada'
                 : isInReview
                 ? 'En Revisión Coord.'
-                : 'Minuto 4 / 10'}
+                : classInfo.attendanceMode === 'inasistencia' || classInfo.elapsedMinutes > 20
+                ? 'Modo Inasistencia (> 20 min)'
+                : classInfo.attendanceMode === 'retardo' || classInfo.elapsedMinutes > 10
+                ? 'Modo Retardo (11-20 min)'
+                : `Minuto ${classInfo.elapsedMinutes || 5} (Puntual)`}
             </Text>
           </View>
 

@@ -32,7 +32,8 @@ export default function StudentScannerScreen({ navigation, route }) {
     qrToken,
     qrSecondsRemaining,
     remoteTeacherToken,
-    validateQrToken
+    validateQrToken,
+    parseQrPayload
   } = useClassSession()
 
   const activeCi = currentUser?.ci || 'V-28.452.190'
@@ -116,6 +117,48 @@ export default function StudentScannerScreen({ navigation, route }) {
       return
     }
 
+    // 1. Verificación de correspondencia de Materia y Aula
+    const parsedPayload = parseQrPayload?.(data)
+    const studentRoom = String(currentUser?.classroomId || classInfo?.classroomId || '204').replace(/[^0-9]/g, '')
+    const studentSubject = currentUser?.subject || classInfo?.subject || 'Matemática'
+
+    if (parsedPayload) {
+      const qrRoom = String(parsedPayload.classroomId || '').replace(/[^0-9]/g, '')
+      const qrSubject = parsedPayload.subject
+
+      // Si el código QR pertenece a otra aula distinta a la que tiene asignada el estudiante
+      if (qrRoom && studentRoom && qrRoom !== studentRoom) {
+        Alert.alert(
+          'Aula No Corresponde (Acceso Denegado)',
+          `Este código QR pertenece al Aula ${qrRoom}${qrSubject ? ` (${qrSubject})` : ''}.\n\nTu aula asignada según tu horario oficial es el Aula ${studentRoom} (${studentSubject}).\n\nNo puedes registrar asistencia en un salón que no te corresponde.`,
+          [{
+            text: 'Entendido',
+            onPress: () => {
+              isScannedRef.current = false
+              setIsScanned(false)
+            }
+          }]
+        )
+        return
+      }
+
+      // Si el código QR especifica una materia que no coincide con la materia del estudiante
+      if (qrSubject && studentSubject && qrSubject.toLowerCase() !== studentSubject.toLowerCase()) {
+        Alert.alert(
+          'Materia No Corresponde (Acceso Denegado)',
+          `Este código QR pertenece a la materia "${qrSubject}".\n\nTu materia asignada para este bloque horario es "${studentSubject}".\n\nNo puedes registrar asistencia en una materia en la que no estás inscrito.`,
+          [{
+            text: 'Entendido',
+            onPress: () => {
+              isScannedRef.current = false
+              setIsScanned(false)
+            }
+          }]
+        )
+        return
+      }
+    }
+
     // Validar estrictamente el token dinámico activo (el código QR anterior queda invalidado)
     const isValid = validateQrToken(data)
 
@@ -134,18 +177,22 @@ export default function StudentScannerScreen({ navigation, route }) {
       return
     }
 
-    // Determinar ventana de tiempo oficial (HU06, HU07, HU08)
-    const elapsed = classInfo.elapsedMinutes || 5
+    // Determinar ventana de tiempo oficial y modo de asistencia establecido por el docente (HU06, HU07, HU08)
+    const effectiveMode = parsedPayload?.mode || classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
+    const elapsed = classInfo.elapsedMinutes || (effectiveMode === 'inasistencia' ? 25 : effectiveMode === 'retardo' ? 15 : 5)
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-    if (elapsed <= 10) {
-      registerStudentAttendance(activeCi, 'present_qr', timeStr)
-      navigation.replace('StudentSuccessPresent')
-    } else if (elapsed <= 20) {
+    if (effectiveMode === 'inasistencia' || elapsed > 20) {
+      navigation.replace('StudentIncidentForm', {
+        autoReason: 'Tiempo Límite Excedido (> 20m)',
+        elapsedMinutes: elapsed
+      })
+    } else if (effectiveMode === 'retardo' || elapsed > 10) {
       registerStudentAttendance(activeCi, 'late', timeStr)
       navigation.replace('StudentSuccessLate')
     } else {
-      navigation.replace('StudentIncidentForm')
+      registerStudentAttendance(activeCi, 'present_qr', timeStr)
+      navigation.replace('StudentSuccessPresent')
     }
   }
 
@@ -166,14 +213,31 @@ export default function StudentScannerScreen({ navigation, route }) {
       return
     }
 
-    if (scenarioMinute <= 10) {
-      registerStudentAttendance(activeCi, 'present_qr', '10:05 AM')
-      navigation.replace('StudentSuccessPresent')
-    } else if (scenarioMinute <= 20) {
-      registerStudentAttendance(activeCi, 'late', '10:14 AM')
+    const studentRoom = String(currentUser?.classroomId || '204').replace(/[^0-9]/g, '')
+    const activeRoom = String(classInfo?.classroomId || '204').replace(/[^0-9]/g, '')
+    if (studentRoom && activeRoom && studentRoom !== activeRoom) {
+      Alert.alert(
+        'Aula No Corresponde (Acceso Denegado)',
+        `Tu aula asignada es el Aula ${studentRoom}, pero esta sesión pertenece al Aula ${activeRoom}. No puedes registrar asistencia en un aula no asignada.`
+      )
+      return
+    }
+
+    const effectiveMode = classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
+    const elapsed = classInfo.elapsedMinutes || (effectiveMode === 'inasistencia' ? 25 : effectiveMode === 'retardo' ? 15 : 5)
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    if (effectiveMode === 'inasistencia' || elapsed > 20) {
+      navigation.replace('StudentIncidentForm', {
+        autoReason: 'Tiempo Límite Excedido (> 20m)',
+        elapsedMinutes: elapsed
+      })
+    } else if (effectiveMode === 'retardo' || elapsed > 10) {
+      registerStudentAttendance(activeCi, 'late', timeStr)
       navigation.replace('StudentSuccessLate')
     } else {
-      navigation.replace('StudentIncidentForm')
+      registerStudentAttendance(activeCi, 'present_qr', timeStr)
+      navigation.replace('StudentSuccessPresent')
     }
   }
 
@@ -202,6 +266,16 @@ export default function StudentScannerScreen({ navigation, route }) {
       return
     }
 
+    const studentRoom = String(currentUser?.classroomId || '204').replace(/[^0-9]/g, '')
+    const activeRoom = String(classInfo?.classroomId || '204').replace(/[^0-9]/g, '')
+    if (studentRoom && activeRoom && studentRoom !== activeRoom) {
+      Alert.alert(
+        'Aula No Corresponde (Acceso Denegado)',
+        `Tu aula asignada es el Aula ${studentRoom}, pero esta sesión pertenece al Aula ${activeRoom}. No puedes registrar asistencia en un aula no asignada.`
+      )
+      return
+    }
+
     if (!manualCode || !validateQrToken(manualCode)) {
       Alert.alert(
         'Código Inválido o Expirado',
@@ -212,14 +286,21 @@ export default function StudentScannerScreen({ navigation, route }) {
 
     setShowManualModal(false)
 
-    if (scenarioMinute <= 10) {
-      registerStudentAttendance(activeCi, 'present_manual', '10:05 AM', 'Falla en cámara móvil')
-      navigation.replace('StudentSuccessPresent')
-    } else if (scenarioMinute <= 20) {
-      registerStudentAttendance(activeCi, 'late', '10:14 AM', 'Falla en cámara móvil')
+    const effectiveMode = classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
+    const elapsed = classInfo.elapsedMinutes || (effectiveMode === 'inasistencia' ? 25 : effectiveMode === 'retardo' ? 15 : 5)
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    if (effectiveMode === 'inasistencia' || elapsed > 20) {
+      navigation.replace('StudentIncidentForm', {
+        autoReason: 'Tiempo Límite Excedido (> 20m)',
+        elapsedMinutes: elapsed
+      })
+    } else if (effectiveMode === 'retardo' || elapsed > 10) {
+      registerStudentAttendance(activeCi, 'late', timeStr, 'Falla en cámara móvil')
       navigation.replace('StudentSuccessLate')
     } else {
-      navigation.replace('StudentIncidentForm')
+      registerStudentAttendance(activeCi, 'present_manual', timeStr, 'Falla en cámara móvil')
+      navigation.replace('StudentSuccessPresent')
     }
   }
 

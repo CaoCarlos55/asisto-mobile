@@ -31,7 +31,7 @@ export default function TeacherRosterScreen({ navigation }) {
       return student.status === 'late'
     }
     if (activeTab === 'pending') {
-      return student.status === 'pending'
+      return student.status === 'pending' || student.status === 'in_review'
     }
     return true
   })
@@ -206,6 +206,13 @@ export default function TeacherRosterScreen({ navigation }) {
           renderItem={renderStudentItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#64748b', fontSize: 14, textAlign: 'center', fontWeight: '500' }}>
+                No hay estudiantes registrados en esta nómina.
+              </Text>
+            </View>
+          }
         />
 
         {/* Barra Fija Inferior */}

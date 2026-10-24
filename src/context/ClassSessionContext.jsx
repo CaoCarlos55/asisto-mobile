@@ -6,16 +6,7 @@ import { useAuth } from './AuthContext'
 
 const ClassSessionContext = createContext(null)
 
-export const DEFAULT_INITIAL_STUDENTS = [
-  { id: 's1', name: 'Daniel Álvarez', ci: 'V-28.452.190', status: 'pending', initials: 'DA' },
-  { id: 's2', name: 'Sofía Mendoza', ci: 'V-28.112.403', status: 'pending', initials: 'SM' },
-  { id: 's3', name: 'Carlos Gómez', ci: 'V-27.994.120', status: 'pending', initials: 'CG' },
-  { id: 's4', name: 'Mariana López', ci: 'V-28.601.215', status: 'pending', initials: 'ML' },
-  { id: 's5', name: 'Andrés Pérez', ci: 'V-29.410.882', status: 'pending', initials: 'AP' },
-  { id: 's6', name: 'Alejandro Rojas', ci: 'V-28.451.902', status: 'pending', initials: 'AR' },
-  { id: 's7', name: 'Mariana Castro', ci: 'V-29.114.839', status: 'pending', initials: 'MC' },
-  { id: 's8', name: 'Daniel Vargas', ci: 'V-27.882.104', status: 'pending', initials: 'DV' }
-]
+export const DEFAULT_INITIAL_STUDENTS = []
 
 // Generador determinista de Token Dinámico tipo TOTP sincronizado por bloques de tiempo (15 segundos)
 export function getDynamicQrToken(timestamp = Date.now()) {
@@ -31,6 +22,51 @@ export function getDynamicQrToken(timestamp = Date.now()) {
 export function getQrSecondsRemaining() {
   const remaining = 15 - (Math.floor(Date.now() / 1000) % 15)
   return remaining === 0 ? 15 : remaining
+}
+
+export function parseQrPayload(qrString) {
+  if (!qrString || typeof qrString !== 'string') return null
+  const str = qrString.trim()
+  if (!str.startsWith('ASISTO:')) return null
+
+  const parts = str.split(':')
+  // Formato con modo: ASISTO:<classroomId>:<subject>:<token>:<timestamp>:<mode> (6 partes)
+  if (parts.length >= 6) {
+    const rawRoom = parts[1].replace(/aula\s*/i, '').trim()
+    return {
+      classroomId: rawRoom,
+      subject: parts[2]?.trim() || null,
+      token: parts[3]?.trim() || null,
+      timestamp: Number(parts[4]) || Date.now(),
+      mode: parts[5]?.trim() || 'normal'
+    }
+  }
+
+  // Formato: ASISTO:<classroomId>:<subject>:<token>:<timestamp> (5 partes)
+  if (parts.length >= 5) {
+    const rawRoom = parts[1].replace(/aula\s*/i, '').trim()
+    return {
+      classroomId: rawRoom,
+      subject: parts[2]?.trim() || null,
+      token: parts[3]?.trim() || null,
+      timestamp: Number(parts[4]) || Date.now(),
+      mode: null
+    }
+  }
+
+  // Formato previo: ASISTO:<classroom>:<token>:<timestamp> (4 partes)
+  if (parts.length >= 4) {
+    const rawRoom = parts[1].replace(/aula\s*/i, '').trim()
+    return {
+      classroomId: rawRoom,
+      subject: null,
+      token: parts[2]?.trim() || null,
+      timestamp: Number(parts[3]) || Date.now(),
+      mode: null
+    }
+  }
+
+  return null
 }
 
 export function ClassSessionProvider({ children }) {
@@ -49,6 +85,7 @@ export function ClassSessionProvider({ children }) {
     teacher: 'Prof. Roberto García',
     qrStatus: 'Activo',
     elapsedMinutes: 5,
+    attendanceMode: 'normal',
     isLive: true
   })
 
@@ -62,6 +99,7 @@ export function ClassSessionProvider({ children }) {
   })
 
   const [cancellationReason, setCancellationReason] = useState('')
+  const [coordinationAlert, setCoordinationAlert] = useState(null)
   const [lastIncidentReset, setLastIncidentReset] = useState(null)
   const lastIncidentResetRef = useRef(null)
 
@@ -132,7 +170,10 @@ export function ClassSessionProvider({ children }) {
         }
       }
 
-      if (baseStudents.length === 0) return
+      if (baseStudents.length === 0) {
+        setStudents([])
+        return
+      }
 
       // Consultar asistencias de las últimas 12 horas para este salón
       const { data: recentLogs } = await supabase
@@ -162,6 +203,9 @@ export function ClassSessionProvider({ children }) {
         } else if (logStatus === 'retardo') {
           status = 'late'
           time = '10:14 AM'
+        } else if (logStatus === 'justificado') {
+          status = 'present_manual'
+          time = '10:05 AM'
         }
 
         return {
@@ -229,72 +273,77 @@ export function ClassSessionProvider({ children }) {
           .from('incidents')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(10)
+          .limit(25)
 
         if (error || !data || !isMounted) return
 
         const activeResetTime = lastIncidentResetRef.current || lastIncidentReset
-        const studentCi = currentUser?.ci || 'V-28.452.190'
-        const studentName = currentUser?.name || 'Daniel'
 
-        const studentIncident = data.find(
-          item =>
-            (item.student_name?.toLowerCase().includes(studentName.toLowerCase()) ||
-             item.student_ci?.includes(studentCi.replace(/[^0-9]/g, '')) ||
-             item.student_ci?.includes('28.452.190')) &&
-            (!activeResetTime || new Date(item.created_at) > new Date(activeResetTime))
-        )
+        setStudents(prev => {
+          let hasAnyChanges = false
+          const updated = prev.map(s => {
+            const cleanStudentCi = s.ci?.replace(/[^0-9]/g, '') || ''
+            const matchingIncident = data.find(item => {
+              if (activeResetTime && new Date(item.created_at) <= new Date(activeResetTime)) {
+                return false
+              }
+              const cleanItemCi = item.student_ci?.replace(/[^0-9]/g, '') || ''
+              return (
+                (cleanStudentCi && cleanItemCi && cleanStudentCi === cleanItemCi) ||
+                (s.name && item.student_name && item.student_name.toLowerCase().includes(s.name.toLowerCase()))
+              )
+            })
 
-        if (studentIncident) {
-          setStudents(prev => {
-            const current = prev.find(
-              s => s.ci.includes(studentCi) || s.name.toLowerCase().includes(studentName.toLowerCase())
-            )
-            if (!current) return prev
+            if (!matchingIncident) return s
 
             if (
-              current.incidentStatus === studentIncident.status &&
-              current.incidentFolio === studentIncident.id
+              s.incidentStatus === matchingIncident.status &&
+              s.incidentFolio === matchingIncident.id
             ) {
-              return prev
+              return s
             }
 
-            const updated = prev.map(s => {
-              if (s.ci.includes(studentCi) || s.name.toLowerCase().includes(studentName.toLowerCase())) {
-                if (studentIncident.status === 'Rechazada') {
-                  return {
-                    ...s,
-                    status: 'rejected',
-                    incidentStatus: 'Rechazada',
-                    incidentVerdict: studentIncident.official_verdict || 'Rechazar',
-                    incidentNotes: studentIncident.official_notes || 'Rechazada por Coordinación Docente',
-                    incidentFolio: studentIncident.id
-                  }
-                } else if (studentIncident.status === 'Aprobada') {
-                  return {
-                    ...s,
-                    status: 'present_manual',
-                    incidentStatus: 'Aprobada',
-                    incidentVerdict: studentIncident.official_verdict || 'Aprobar',
-                    incidentNotes: studentIncident.official_notes || 'Aprobada por Coordinación Docente',
-                    incidentFolio: studentIncident.id,
-                    contingency: 'Justificación Aprobada por Coordinación'
-                  }
-                } else if (studentIncident.status === 'Pendiente') {
-                  return {
-                    ...s,
-                    status: 'in_review',
-                    incidentStatus: 'Pendiente',
-                    incidentFolio: studentIncident.id
-                  }
-                }
+            hasAnyChanges = true
+            if (matchingIncident.status === 'Rechazada') {
+              return {
+                ...s,
+                status: 'rejected',
+                incidentStatus: 'Rechazada',
+                incidentVerdict: matchingIncident.official_verdict || 'Rechazar',
+                incidentNotes: matchingIncident.official_notes || 'Rechazada por Coordinación Docente',
+                incidentFolio: matchingIncident.id,
+                incidentMotive: matchingIncident.tag_type
               }
-              return s
-            })
+            } else if (matchingIncident.status === 'Aprobada') {
+              return {
+                ...s,
+                status: 'present_manual',
+                incidentStatus: 'Aprobada',
+                incidentVerdict: matchingIncident.official_verdict || 'Aprobar',
+                incidentNotes: matchingIncident.official_notes || 'Aprobada por Coordinación Docente',
+                incidentFolio: matchingIncident.id,
+                incidentMotive: matchingIncident.tag_type,
+                contingency: 'Justificación Aprobada por Coordinación'
+              }
+            } else if (matchingIncident.status === 'Pendiente') {
+              return {
+                ...s,
+                status: 'in_review',
+                incidentStatus: 'Pendiente',
+                incidentFolio: matchingIncident.id,
+                incidentMotive: matchingIncident.tag_type,
+                incidentDescription: matchingIncident.statement
+              }
+            }
+            return s
+          })
+
+          if (hasAnyChanges) {
             persistOffline(updated)
             return updated
-          })
-        }
+          }
+          return prev
+        })
       } catch (e) {
         // Fallback silencioso
       }
@@ -353,15 +402,19 @@ export function ClassSessionProvider({ children }) {
   const publishTeacherToken = useCallback(async (token, ts) => {
     if (!supabase || !isTeacher) return
     const roomId = classInfo.classroomId || '204'
+    const mode = classInfo.attendanceMode || (classInfo.elapsedMinutes > 20 ? 'inasistencia' : classInfo.elapsedMinutes > 10 ? 'retardo' : 'normal')
     try {
       await supabase
         .from('classrooms')
-        .update({ sub_note: `QR:${token}:${ts}` })
+        .update({
+          sub_note: `QR:${token}:${ts}:${mode}`,
+          delay_minutes: classInfo.elapsedMinutes || 5
+        })
         .eq('id', roomId)
     } catch (e) {
       // Fallback offline
     }
-  }, [classInfo.classroomId, isTeacher])
+  }, [classInfo.classroomId, classInfo.attendanceMode, classInfo.elapsedMinutes, isTeacher])
 
   // Sincronizar el token dinámico y la cuenta regresiva con el reloj TOTP
   useEffect(() => {
@@ -387,29 +440,84 @@ export function ClassSessionProvider({ children }) {
     return () => clearInterval(timer)
   }, [qrToken, qrTimestamp, isTeacher, publishTeacherToken])
 
-  // Escuchar en tiempo real el token proyectado por el docente en el aula
+  // Escuchar en tiempo real el token proyectado por el docente en el aula y alertas de coordinación
   useEffect(() => {
     if (!supabase) return
     const roomId = classInfo.classroomId || '204'
+
+    const handleClassroomUpdate = (item) => {
+      if (!item) return
+
+      // 1. Token dinámico QR y modo de asistencia
+      if (item.sub_note?.startsWith('QR:')) {
+        const parts = item.sub_note.split(':')
+        const token = parts[1]
+        const ts = parts[2]
+        const remoteMode = parts[3]
+        if (token) {
+          setRemoteTeacherToken(prev => {
+            if (prev && prev !== token) setRemoteTeacherPreviousToken(prev)
+            return token
+          })
+          if (ts) {
+            const numTs = Number(ts)
+            setRemoteTeacherTimestamp(numTs)
+            setClockOffset(numTs - Date.now())
+            lastKnownTeacherTsRef.current = Math.max(lastKnownTeacherTsRef.current, numTs)
+          }
+        }
+        if (remoteMode) {
+          const minutes = remoteMode === 'inasistencia' ? 25 : remoteMode === 'retardo' ? 15 : 5
+          setClassInfo(prev => ({
+            ...prev,
+            attendanceMode: remoteMode,
+            elapsedMinutes: typeof item.delay_minutes === 'number' ? item.delay_minutes : minutes
+          }))
+        }
+      } else if (typeof item.delay_minutes === 'number') {
+        const remoteMode = item.delay_minutes > 20 ? 'inasistencia' : item.delay_minutes > 10 ? 'retardo' : 'normal'
+        setClassInfo(prev => ({
+          ...prev,
+          attendanceMode: remoteMode,
+          elapsedMinutes: item.delay_minutes
+        }))
+      }
+
+      // 2. Alertas de coordinación docente hacia el aula
+      if (item.has_action && item.action_text?.includes('NOTIFICAR_CIERRE')) {
+        setCoordinationAlert('Coordinación Docente solicita el cierre y envío inmediato de la nómina de clase.')
+      } else if (!item.has_action && !item.action_text?.includes('NOTIFICAR_CIERRE')) {
+        setCoordinationAlert(null)
+      }
+
+      // 3. Cierre forzoso de clase desde coordinación
+      if (item.status === 'free' && item.note?.includes('Cierre forzoso')) {
+        setSessionStatus('closed')
+        setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
+        setStudents(prev => {
+          const closed = prev.map(s => s.status === 'pending' ? { ...s, status: 'absent' } : s)
+          persistOffline(closed, 'closed')
+          return closed
+        })
+      }
+
+      // 4. Cancelación de sesión desde coordinación o docente
+      if (item.status === 'danger' && item.status_label === 'Cancelada') {
+        setSessionStatus('cancelled')
+        setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
+        setCancellationReason(item.note || 'Cancelada por Coordinación')
+      }
+    }
 
     const fetchClassroomToken = async () => {
       try {
         const { data } = await supabase
           .from('classrooms')
-          .select('sub_note')
+          .select('*')
           .eq('id', roomId)
           .single()
-        if (data?.sub_note?.startsWith('QR:')) {
-          const [, token, ts] = data.sub_note.split(':')
-          if (token) {
-            setRemoteTeacherToken(token)
-            if (ts) {
-              const numTs = Number(ts)
-              setRemoteTeacherTimestamp(numTs)
-              setClockOffset(numTs - Date.now())
-              lastKnownTeacherTsRef.current = Math.max(lastKnownTeacherTsRef.current, numTs)
-            }
-          }
+        if (data) {
+          handleClassroomUpdate(data)
         }
       } catch (e) {
         // Fallback offline
@@ -425,20 +533,8 @@ export function ClassSessionProvider({ children }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'classrooms', filter: `id=eq.${roomId}` },
         (payload) => {
-          if (payload.new?.sub_note?.startsWith('QR:')) {
-            const [, token, ts] = payload.new.sub_note.split(':')
-            if (token) {
-              setRemoteTeacherToken(prev => {
-                if (prev && prev !== token) setRemoteTeacherPreviousToken(prev)
-                return token
-              })
-              if (ts) {
-                const numTs = Number(ts)
-                setRemoteTeacherTimestamp(numTs)
-                setClockOffset(numTs - Date.now())
-                lastKnownTeacherTsRef.current = Math.max(lastKnownTeacherTsRef.current, numTs)
-              }
-            }
+          if (payload.new) {
+            handleClassroomUpdate(payload.new)
           }
         }
       )
@@ -456,8 +552,13 @@ export function ClassSessionProvider({ children }) {
 
     let candidate = str
     if (str.includes(':')) {
-      const parts = str.split(':')
-      candidate = parts.length >= 3 ? parts[2] : parts[parts.length - 1]
+      const parsed = parseQrPayload(str)
+      if (parsed && parsed.token) {
+        candidate = parsed.token
+      } else {
+        const parts = str.split(':')
+        candidate = parts.length >= 3 ? parts[2] : parts[parts.length - 1]
+      }
     }
     const clean = candidate.replace(/[^0-9]/g, '')
     if (!clean || clean.length < 6) return false
@@ -478,6 +579,36 @@ export function ClassSessionProvider({ children }) {
     setClassInfo(prev => ({ ...prev, qrStatus: 'Inerte', isLive: false }))
     await persistOffline(students, 'cancelled', logbook)
     await cancelClassroomSession(classInfo.classroomId || '204', reason)
+
+    if (supabase) {
+      try {
+        const folio = `INC-CANC-${Math.floor(1000 + Math.random() * 9000)}`
+        const teacherName = currentUser?.name || classInfo.teacher || 'Prof. Roberto García'
+        const teacherCi = currentUser?.ci || 'V-12.345.678'
+        await supabase.from('incidents').insert({
+          id: folio,
+          time_label: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          student_name: `Docente: ${teacherName}`,
+          student_ci: teacherCi,
+          year_level: classInfo.section || '5to Año • Sección B',
+          attendance_accum: 'N/A',
+          history_stats: 'Cancelación de sesión programada',
+          subject: classInfo.subject || 'Matemática',
+          subject_short: (classInfo.subject || 'Matemática').split(' ')[0],
+          teacher: teacherName,
+          room: classInfo.classroom || 'Aula 204',
+          scan_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tag_type: 'Cancelación de Clase',
+          tag_color: 'red',
+          file_type: 'Acta de Suspensión',
+          statement: `Sesión cancelada por el docente: "${reason}"`,
+          pdf_name: 'acta_suspension.pdf',
+          status: 'Pendiente'
+        })
+      } catch (e) {
+        console.warn('Error al registrar incidencia por cancelación:', e)
+      }
+    }
   }
 
   const markManualAttendance = async (studentId, cause) => {
@@ -538,6 +669,41 @@ export function ClassSessionProvider({ children }) {
     const newLog = { topic, incidentType, observations, subject: classInfo.subject }
     setLogbook(newLog)
     await persistOffline(students, sessionStatus, newLog)
+
+    // Si el docente reportó una incidencia en el aula (conducta, infraestructura, etc.),
+    // registrarla en la bandeja de incidencias de Supabase para que Coordinación la atienda
+    if (incidentType && incidentType !== 'Clase sin novedades' && supabase) {
+      try {
+        const folio = `INC-DOC-${Math.floor(1000 + Math.random() * 9000)}`
+        const teacherName = currentUser?.name || classInfo.teacher || 'Prof. Roberto García'
+        const teacherCi = currentUser?.ci || 'V-12.345.678'
+        const roomName = classInfo.classroom || 'Aula 204'
+        const tagColor = incidentType === 'Falla de infraestructura' ? 'red' : incidentType === 'Incidencia de conducta' ? 'amber' : 'blue'
+
+        await supabase.from('incidents').insert({
+          id: folio,
+          time_label: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          student_name: `Docente: ${teacherName}`,
+          student_ci: teacherCi,
+          year_level: classInfo.section || '5to Año • Sección B',
+          attendance_accum: 'N/A',
+          history_stats: `Tema: ${topic ? topic.substring(0, 30) : 'Sin tema'}`,
+          subject: classInfo.subject || 'Matemática',
+          subject_short: (classInfo.subject || 'Matemática').split(' ')[0],
+          teacher: teacherName,
+          room: roomName,
+          scan_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tag_type: incidentType,
+          tag_color: tagColor,
+          file_type: 'Bitácora Docente',
+          statement: observations || `Reporte docente en bitácora (${incidentType}): ${topic}`,
+          pdf_name: 'bitacora_docente.pdf',
+          status: 'Pendiente'
+        })
+      } catch (e) {
+        console.warn('Error al registrar incidencia de bitácora en Supabase:', e)
+      }
+    }
   }
 
   const executeFinalClosure = async () => {
@@ -588,6 +754,7 @@ export function ClassSessionProvider({ children }) {
     setLastIncidentReset(now)
     lastIncidentResetRef.current = now
     setSessionStatus('active')
+    setCoordinationAlert(null)
 
     const roomNum = currentUser?.classroomId || '204'
     const roomDisplayName = roomNum.startsWith('Aula') ? roomNum : `Aula ${roomNum}`
@@ -633,6 +800,7 @@ export function ClassSessionProvider({ children }) {
       teacher: teacherName,
       qrStatus: 'Activo',
       elapsedMinutes: 5,
+      attendanceMode: 'normal',
       isLive: true
     })
 
@@ -714,13 +882,50 @@ export function ClassSessionProvider({ children }) {
     await loadRosterFromSupabase(targetRoom)
   }
 
+  // Cambiar modalidad de asistencia de la clase (Puntual, Retardo, Inasistencia)
+  const setAttendanceMode = async (mode) => {
+    let minutes = 5
+    if (mode === 'retardo') minutes = 15
+    if (mode === 'inasistencia') minutes = 25
+
+    setClassInfo(prev => ({
+      ...prev,
+      attendanceMode: mode,
+      elapsedMinutes: minutes
+    }))
+
+    await persistOffline(students, sessionStatus, logbook)
+
+    if (supabase && isTeacher) {
+      const roomId = classInfo.classroomId || '204'
+      try {
+        await supabase
+          .from('classrooms')
+          .update({
+            delay_minutes: minutes,
+            note: mode === 'inasistencia'
+              ? 'Ventana expirada • Modo Inasistencia (> 20 min)'
+              : mode === 'retardo'
+              ? 'Ventana tolerancia • Modo Retardo (11-20 min)'
+              : 'Ventana puntual • Modo Normal (0-10 min)',
+            sub_note: `QR:${qrToken}:${qrTimestamp}:${mode}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', roomId)
+      } catch (e) {
+        console.warn('Error al actualizar modo de asistencia en Supabase:', e)
+      }
+    }
+  }
+
   const metrics = {
     total: students.length,
     presents: students.filter(s => s.status === 'present_qr' || s.status === 'present_manual').length,
     presentsQr: students.filter(s => s.status === 'present_qr').length,
     presentsManual: students.filter(s => s.status === 'present_manual').length,
     lates: students.filter(s => s.status === 'late').length,
-    pending: students.filter(s => s.status === 'pending').length,
+    pending: students.filter(s => s.status === 'pending' || s.status === 'in_review').length,
+    inReview: students.filter(s => s.status === 'in_review').length,
     absents: students.filter(s => s.status === 'absent').length
   }
 
@@ -733,6 +938,8 @@ export function ClassSessionProvider({ children }) {
         setClassInfo,
         students,
         metrics,
+        coordinationAlert,
+        clearCoordinationAlert: () => setCoordinationAlert(null),
         logbook,
         cancellationReason,
         cancelClass,
@@ -740,6 +947,7 @@ export function ClassSessionProvider({ children }) {
         saveLogbook,
         executeFinalClosure,
         registerStudentAttendance,
+        setAttendanceMode,
         resetSession,
         resetStudentAttendance,
         registerIncident,
@@ -750,7 +958,8 @@ export function ClassSessionProvider({ children }) {
         remoteTeacherToken,
         remoteTeacherPreviousToken,
         remoteTeacherTimestamp,
-        validateQrToken
+        validateQrToken,
+        parseQrPayload
       }}
     >
       {children}

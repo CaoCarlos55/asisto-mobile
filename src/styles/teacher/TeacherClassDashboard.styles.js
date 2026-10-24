@@ -297,5 +297,121 @@ export const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 13,
     fontWeight: '700'
+  },
+  alertBanner: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10
+  },
+  alertBannerTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#92400e',
+    marginBottom: 2
+  },
+  alertBannerText: {
+    fontSize: 12,
+    color: '#78350f',
+    lineHeight: 16
+  },
+  alertBannerBtn: {
+    backgroundColor: '#b45309',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8
+  },
+  alertBannerBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  dashboardModeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 14,
+    marginBottom: 14,
+    ...theme.shadows.card
+  },
+  dashboardModeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  dashboardModeTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1e3a8a',
+    letterSpacing: 0.5
+  },
+  dashboardModePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10
+  },
+  dashboardModePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0f172a'
+  },
+  modeBadgeGreen: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac'
+  },
+  modeBadgeAmber: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fcd34d'
+  },
+  modeBadgeRed: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fca5a5'
+  },
+  dashboardModeButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%'
+  },
+  dashboardModeBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 4,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
+  },
+  dashboardModeBtnActiveGreen: {
+    backgroundColor: '#15803d',
+    borderColor: '#15803d'
+  },
+  dashboardModeBtnActiveAmber: {
+    backgroundColor: '#b45309',
+    borderColor: '#b45309'
+  },
+  dashboardModeBtnActiveRed: {
+    backgroundColor: '#b91c1c',
+    borderColor: '#b91c1c'
+  },
+  dashboardModeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+    textAlign: 'center'
+  },
+  dashboardModeBtnTextActive: {
+    color: '#ffffff'
   }
 })

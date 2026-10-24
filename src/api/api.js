@@ -33,6 +33,38 @@ export async function sendAttendanceLog({
   const roomId = normalizeClassroomId(classroomId)
 
   try {
+    // 0. Validar correspondencia: verificar si el estudiante pertenece a esta aula/materia
+    if (studentCi && roomId) {
+      const cleanCiDigits = String(studentCi).replace(/[^0-9]/g, '')
+      const { data: studentProfile } = await supabase
+        .from('profiles')
+        .select('classroom_id, subject, full_name')
+        .or(`ci.eq.${studentCi},ci.ilike.%${studentCi}%,ci.ilike.%${cleanCiDigits}%`)
+        .maybeSingle()
+
+      if (studentProfile && studentProfile.classroom_id) {
+        const studentRoomNorm = normalizeClassroomId(studentProfile.classroom_id)
+        if (studentRoomNorm !== roomId) {
+          console.warn(`[Security] Bloqueado: Estudiante ${studentCi} (${studentRoomNorm}) intentó registrarse en aula no correspondiente (${roomId})`)
+          
+          // Registrar incidencia por intento no autorizado para auditoría de Coordinación
+          await supabase.from('incidents').insert({
+            student_name: studentProfile.full_name || 'Estudiante',
+            student_ci: studentCi,
+            subject: subject || 'Materia no asignada',
+            room: `Aula ${roomId}`,
+            tag_type: 'Materia no Asignada',
+            tag_color: 'red',
+            status: 'Pendiente',
+            statement: `Intento de registro de asistencia en Aula ${roomId} (${subject || ''}) cuando el alumno está oficialmente asignado al Aula ${studentRoomNorm} (${studentProfile.subject || ''}).`,
+            official_notes: 'Bloqueado automáticamente por validación de correspondencia curricular.'
+          }).catch(() => {})
+
+          return { error: 'El estudiante no pertenece a esta aula/materia', blocked: true }
+        }
+      }
+    }
+
     let { data, error } = await supabase.from('attendance_logs').insert({
       student_ci: studentCi,
       classroom_id: roomId,
@@ -83,14 +115,29 @@ export async function sendIncidentReport({
   if (!supabase) return { folio, offline: true }
 
   try {
+    let attendanceAccum = '92%'
+    let historyStats = '28 Asistencias / 1 Falta'
+    try {
+      const cleanCiDigits = studentCi.replace(/[^0-9]/g, '')
+      const { data: st } = await supabase
+        .from('students')
+        .select('attendance_pct, attendance_ratio')
+        .or(`ci.eq.${studentCi},ci.ilike.%${studentCi}%,ci.ilike.%${cleanCiDigits}%`)
+        .maybeSingle()
+      if (st) {
+        if (st.attendance_pct) attendanceAccum = `${st.attendance_pct}%`
+        if (st.attendance_ratio) historyStats = st.attendance_ratio
+      }
+    } catch (e) {}
+
     const { data, error } = await supabase.from('incidents').insert({
       id: folio,
       time_label: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       student_name: studentName,
       student_ci: studentCi,
       year_level: yearLevel,
-      attendance_accum: '92%',
-      history_stats: '28 Asistencias / 1 Falta',
+      attendance_accum: attendanceAccum,
+      history_stats: historyStats,
       subject: subject,
       subject_short: subject.split(' ')[0],
       teacher: teacher,
